@@ -1,0 +1,46 @@
+# EDK II source tree (local dependency)
+edk2/
+
+# Build output
+Build/
+build/
+run-*/
+NvVars/
+
+# Firmware artifacts
+*.efi
+*.fd
+*.fv
+*.cap
+*.rom
+
+# Native binaries
+*.exe
+*.dll
+*.so
+*.a
+*.o
+*.out
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# AI tools
+.codex
+.codex/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Logs
+*.log
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
