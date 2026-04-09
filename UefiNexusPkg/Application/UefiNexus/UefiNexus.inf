@@ -1,0 +1,21 @@
+[Defines]
+  INF_VERSION                    = 0x0001001A
+  BASE_NAME                      = UefiNexus
+  FILE_GUID                      = 7d2d8f13-6d51-4df2-9c58-91a5f0cf3001
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 0.1
+  ENTRY_POINT                    = UefiNexusMain
+
+[Sources]
+  UefiNexus.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  UefiNexusPkg/UefiNexusPkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib
+
+[LibraryClasses.AARCH64]
+  CompilerIntrinsicsLib
