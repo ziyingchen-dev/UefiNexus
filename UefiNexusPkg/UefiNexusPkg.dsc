@@ -24,6 +24,9 @@
   UefiApplicationEntryPoint|MdePkg/Library/UefiApplicationEntryPoint/UefiApplicationEntryPoint.inf
   UefiLib|MdePkg/Library/UefiLib/UefiLib.inf
 
+  NexusMemLib|UefiNexusPkg/Library/NexusMemLib/NexusMemLib.inf
+  TuiLib|UefiNexusPkg/Library/TuiLib/TuiLib.inf
+
 [LibraryClasses.AARCH64]
   CompilerIntrinsicsLib|MdePkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
 

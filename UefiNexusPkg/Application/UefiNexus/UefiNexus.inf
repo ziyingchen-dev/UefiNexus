@@ -1,21 +1,32 @@
 [Defines]
-  INF_VERSION                    = 0x0001001A
+  INF_VERSION                    = 0x00010005
   BASE_NAME                      = UefiNexus
-  FILE_GUID                      = 7d2d8f13-6d51-4df2-9c58-91a5f0cf3001
+  FILE_GUID                      = 8F470E50-F123-4E10-9F5F-6C3F8B1A2C3D
   MODULE_TYPE                    = UEFI_APPLICATION
-  VERSION_STRING                 = 0.1
+  VERSION_STRING                 = 1.0
   ENTRY_POINT                    = UefiNexusMain
 
 [Sources]
   UefiNexus.c
+  Pages/PageMenu.c
+  Pages/PageRegistry.c
+  Pages/PageMem/PageMem.c
+  Pages/PageMem/PageMemUi.c
+  Pages/PageMem/PageMemActions.c
+  Pages/PageMem/PageMemHelper.c
 
 [Packages]
   MdePkg/MdePkg.dec
   UefiNexusPkg/UefiNexusPkg.dec
 
 [LibraryClasses]
+  BaseLib
   UefiApplicationEntryPoint
   UefiLib
+  PrintLib
+  UefiBootServicesTableLib
+  NexusMemLib
+  TuiLib
 
 [LibraryClasses.AARCH64]
   CompilerIntrinsicsLib
