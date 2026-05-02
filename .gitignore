@@ -1,0 +1,5 @@
+/build/
+/edk2/Build/
+/run-x64-usb/*.efi
+/run-aa64-usb/*.efi
+/run-x64-usb/NvVars
