@@ -62,7 +62,7 @@ PageMemEditValue(
     }
 
     //
-    // ✅ 用 MemWrite（不要 CopyMem）
+    // Use MemWrite here rather than CopyMem so the write path stays centralized.
     //
     MemWrite(Ctx->Address + Ctx->Offset, Ctx->Width, NewVal);
 }

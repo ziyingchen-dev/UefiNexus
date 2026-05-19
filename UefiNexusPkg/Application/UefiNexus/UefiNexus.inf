@@ -10,10 +10,20 @@
   UefiNexus.c
   Pages/PageMenu.c
   Pages/PageRegistry.c
-  Pages/PageMem/PageMem.c
-  Pages/PageMem/PageMemUi.c
-  Pages/PageMem/PageMemActions.c
-  Pages/PageMem/PageMemHelper.c
+  Pages/PageMemLayered.c
+  ../../Core/Mem/CursorEngine.c
+  ../../Core/Mem/LayoutEngine.c
+  ../../Core/Mem/FormatEngine.c
+  ../../Core/Mem/AddressMap.c
+  ../../Core/Mem/StateMachine.c
+  ../../UI/Pages/PageMem/PageMemView.c
+  ../../UI/Pages/PageMem/PageMemController.c
+  ../../UI/Pages/PageMem/PageMemActions.c
+  ../../Adapter/Uefi/MemAdapter.c
+  ../../Adapter/Uefi/TuiAdapter.c
+  ../../Adapter/Uefi/ErrorAdapter.c
+  ../../Adapter/Uefi/AdapterManager.c
+  ../../Adapter/Uefi/UefiBridge.c
 
 [Packages]
   MdePkg/MdePkg.dec

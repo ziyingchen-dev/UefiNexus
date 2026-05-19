@@ -93,7 +93,7 @@ PageMem(VOID)
 
         case L'r':
         case L'R':
-            DumpValidMemoryRanges();
+            DumpMemoryRanges(TRUE);
             Redraw = TRUE;
             break;
 

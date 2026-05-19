@@ -141,6 +141,32 @@ GetCellPosition(
 // =======================
 //
 
+STATIC
+VOID
+BuildCellString(
+    IN  BOOLEAN IsValid,
+    IN  UINT64  Value,
+    IN  UINTN   Width,
+    OUT CHAR16 *Buffer
+    )
+{
+    if (!IsValid) {
+
+        UINTN Count = Width * 2;
+
+        for (UINTN i = 0; i < Count; i++) {
+            Buffer[i] = L'?';
+        }
+
+        Buffer[Count] = L' ';
+        Buffer[Count + 1] = L'\0';
+
+    } else {
+
+        FormatValueLE(Value, Width, Buffer, CELL_STR_MAX(8));
+    }
+}
+
 VOID
 PageMemUpdateCell(
     IN CONST PAGEMEM_CONTEXT *Ctx,
@@ -162,25 +188,11 @@ PageMemUpdateCell(
         TuiSetAttribute(EFI_LIGHTGRAY | EFI_BACKGROUND_BLACK);
     }
 
-    if (!IsRangeValid(Addr, Ctx->Width)) {
+    BOOLEAN Valid = IsRangeValid(Addr, Ctx->Width);
+    UINT64 Value  = Valid ? MemRead(Addr, Ctx->Width) : 0;
 
-        UINTN Count = Ctx->Width * 2;
-
-        for (UINTN i = 0; i < Count; i++) {
-            Buffer[i] = L'?';
-        }
-
-        Buffer[Count] = L' ';
-        Buffer[Count + 1] = L'\0';
-
-        Print(L"%s", Buffer);
-
-    } else {
-
-        UINT64 Value = MemRead(Addr, Ctx->Width);
-        FormatValueLE(Value, Ctx->Width, Buffer, sizeof(Buffer));
-        Print(L"%s", Buffer);
-    }
+    BuildCellString(Valid, Value, Ctx->Width, Buffer);
+    Print(L"%s", Buffer);
 
     TuiSetAttribute(EFI_LIGHTGRAY | EFI_BACKGROUND_BLACK);
 }

@@ -13,7 +13,7 @@ BOOLEAN EFIAPI IsPageValid(UINT64 Address, UINTN PageSize);
 UINT64 EFIAPI GetFirstValidAddress(VOID);
 UINT64 EFIAPI GetNextValidPageAddress(UINT64 Address, UINTN PageSize);
 UINT64 EFIAPI GetPreviousValidPageAddress(UINT64 Address, UINTN PageSize);
-VOID EFIAPI DumpValidMemoryRanges(VOID);
+VOID EFIAPI DumpMemoryRanges(IN BOOLEAN ShowAllTypes);
 
 CONST EFI_MEMORY_DESCRIPTOR * EFIAPI GetMemoryMapDescriptors(
     OUT UINTN *MemoryMapSize,

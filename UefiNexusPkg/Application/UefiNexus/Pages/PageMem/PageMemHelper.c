@@ -16,7 +16,7 @@ PageMemMoveCursor(
     IN INTN Delta
     )
 {
-    INTN Step = Ctx->Width;  // ⭐ 核心：每次移動一個 cell
+    INTN Step = Ctx->Width;  // Move by exactly one displayed cell per step.
 
     INTN NewOffset = (INTN)Ctx->Offset + (Delta * Step);
 
@@ -27,7 +27,7 @@ PageMemMoveCursor(
         NewOffset = PAGE_SIZE - Ctx->Width;
 
     //
-    // ⭐ 確保 alignment（非常重要）
+    // Preserve alignment so the cursor remains on a valid cell boundary.
     //
     NewOffset &= ~(Ctx->Width - 1);
 

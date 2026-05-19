@@ -98,7 +98,7 @@ PageMemMoveCursor(
     );
 
 //
-// Internal formatting helpers (pure logic, 可單元測試)
+// Internal formatting helpers (pure logic, suitable for unit testing)
 //
 UINTN
 GetCellDisplayWidth(

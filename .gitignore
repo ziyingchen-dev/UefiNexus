@@ -1,5 +1,34 @@
-/build/
-/edk2/Build/
-/run-x64-usb/*.efi
-/run-aa64-usb/*.efi
-/run-x64-usb/NvVars
+# build output
+build/
+Build/
+
+# edk2
+edk2/
+
+# runtime artifacts
+run-*/
+NvVars/
+
+# firmware binaries
+*.efi
+*.fd
+*.rom
+
+# host binaries
+*.exe
+*.dll
+*.so
+*.o
+*.a
+
+# editor
+.vscode/
+.idea/
+.codex/
+
+# python
+__pycache__/
+
+# logs
+*.log
+*.tmp

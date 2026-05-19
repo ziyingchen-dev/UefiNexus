@@ -1,3 +1,7 @@
+//
+// MemMap.c - Memory Map Management Library
+//
+
 #include <Uefi.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
@@ -36,27 +40,25 @@ AlignDown(UINT64 Address, UINTN Alignment)
     return Address & ~((UINT64)Alignment - 1);
 }
 
-STATIC
 CONST CHAR16 *
 MemoryTypeToStr(UINT32 Type)
 {
     switch (Type) {
-    case EfiConventionalMemory:
-        return L"Conventional";
-    case EfiBootServicesCode:
-        return L"BootCode";
-    case EfiBootServicesData:
-        return L"BootData";
-    case EfiLoaderCode:
-        return L"LoaderCode";
-    case EfiLoaderData:
-        return L"LoaderData";
-    case EfiRuntimeServicesCode:
-        return L"RtCode";
-    case EfiRuntimeServicesData:
-        return L"RtData";
-    default:
-        return L"Other";
+    case EfiConventionalMemory:      return L"Conventional";
+    case EfiBootServicesCode:        return L"BootCode";
+    case EfiBootServicesData:        return L"BootData";
+    case EfiLoaderCode:              return L"LoaderCode";
+    case EfiLoaderData:              return L"LoaderData";
+    case EfiRuntimeServicesCode:     return L"RtCode";
+    case EfiRuntimeServicesData:     return L"RtData";
+    case EfiACPIReclaimMemory:       return L"ACPIReclaimMemory";
+    case EfiACPIMemoryNVS:           return L"ACPIMemoryNVS";
+    case EfiMemoryMappedIO:          return L"MemoryMappedIO";
+    case EfiMemoryMappedIOPortSpace: return L"MemoryMappedIOPort";
+    case EfiReservedMemoryType:      return L"ReservedMemory";
+    case EfiUnusableMemory:          return L"UnusableMemory";
+    case EfiPalCode:                 return L"PalCode";
+    default:                         return L"Unknown";
     }
 }
 
@@ -79,6 +81,19 @@ GetMemoryMapDescriptors(
     return (CONST EFI_MEMORY_DESCRIPTOR *)gMemMap;
 }
 
+VOID
+EFIAPI
+SetMemoryMapForTesting(
+    IN CONST EFI_MEMORY_DESCRIPTOR *MemoryMap,
+    IN UINTN MemoryMapSize,
+    IN UINTN DescriptorSize
+    )
+{
+    gMemMap = (EFI_MEMORY_DESCRIPTOR *)MemoryMap;
+    gMemMapSize = MemoryMapSize;
+    gDescSize = DescriptorSize;
+}
+
 //
 // ---------------- Memory Map ----------------
 //
@@ -89,7 +104,7 @@ InitMemoryMap(VOID)
     EFI_STATUS Status;
     UINTN MapKey;
     UINT32 DescVersion;
-    // 防止重複初始化導致的記憶體洩漏
+    // Prevent memory leaks when initialization is performed more than once.
     if (gMemMap != NULL) {
         gBS->FreePool(gMemMap);
         gMemMap = NULL;
@@ -311,9 +326,42 @@ GetPreviousValidPageAddress(UINT64 Address, UINTN PageSize)
     return Found ? BestPage : CurrentPage;
 }
 
+STATIC
+CONST CHAR16 *
+GetMemoryTag(UINT32 Type)
+{
+    switch (Type) {
+    case EfiConventionalMemory:
+    case EfiBootServicesData:
+    case EfiLoaderData:
+    case EfiRuntimeServicesData:
+        return L"[RW]";
+    case EfiBootServicesCode:
+    case EfiLoaderCode:
+    case EfiRuntimeServicesCode:
+        return L"[RO]";
+    case EfiACPIReclaimMemory:
+    case EfiACPIMemoryNVS:
+        return L"[ACPI]";
+    case EfiMemoryMappedIO:
+    case EfiMemoryMappedIOPortSpace:
+        return L"[MMIO]";
+    case EfiReservedMemoryType:
+    case EfiPalCode:
+        return L"[RSV]";
+    case EfiUnusableMemory:
+        return L"[BAD]";
+    default:
+        return L"[UNK]";
+    }
+}
+
+//
+// ---------------- Dump ----------------
+//
 VOID
 EFIAPI
-DumpValidMemoryRanges(VOID)
+DumpMemoryRanges(IN BOOLEAN ShowAllTypes)
 {
     UINTN Count;
     UINTN Printed;
@@ -323,26 +371,35 @@ DumpValidMemoryRanges(VOID)
 
     TuiClearScreen();
 
-    Print(L"Accessible memory ranges\n\n");
-    Print(L"Type            Start              End                Pages\n");
+    Print(L"Memory ranges\n\n");
+    Print(L"%-7ls  %-20ls  %-16ls  %ls\n",
+          L"Tag", L"Type", L"Start", L"Pages");
 
     for (UINTN i = 0; i < Count; i++) {
         EFI_MEMORY_DESCRIPTOR *Desc;
         UINT64                 Start;
-        UINT64                 End;
+        CONST CHAR16          *Tag;
 
         Desc = (EFI_MEMORY_DESCRIPTOR *)((UINT8 *)gMemMap + i * gDescSize);
-        if (!IsMemoryTypeValid(Desc->Type) || Desc->NumberOfPages == 0) {
+        if (Desc->NumberOfPages == 0) {
             continue;
         }
 
-        Start = Desc->PhysicalStart;
-        End   = Start + (Desc->NumberOfPages << 12) - 1;
+        if (ShowAllTypes) {
+            Tag = GetMemoryTag(Desc->Type);
+        } else {
+            if (!IsMemoryTypeValid(Desc->Type)) {
+                continue;
+            }
+            Tag = L"[RW]";
+        }
 
-        Print(L"%-15s %016lx %016lx %8lu\n",
+        Start = Desc->PhysicalStart;
+
+        Print(L"%-7ls  %-20ls  %016llX  %llu\n",
+              Tag,
               MemoryTypeToStr(Desc->Type),
               Start,
-              End,
               Desc->NumberOfPages);
 
         Printed++;
@@ -350,8 +407,9 @@ DumpValidMemoryRanges(VOID)
             Print(L"\nPress any key to continue...");
             TuiWaitForKeyPress();
             TuiClearScreen();
-            Print(L"Accessible memory ranges\n\n");
-            Print(L"Type            Start              End                Pages\n");
+            Print(L"Memory ranges\n\n");
+            Print(L"%-7s  %-20s  %-16s  %s\n",
+                  L"Tag", L"Type", L"Start", L"Pages");
         }
     }
 
