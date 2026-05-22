@@ -15,6 +15,9 @@ if len(sys.argv) != 2:
 with open(sys.argv[1], "r", encoding="utf-8") as f:
     diff = f.read()
 
+MAX_DIFF_SIZE = 20000
+diff = diff[:MAX_DIFF_SIZE]
+
 prompt = f"""
 You are a senior firmware and UEFI architecture reviewer.
 
@@ -54,7 +57,7 @@ Git diff:
 client = genai.Client(api_key=api_key)
 
 response = client.models.generate_content(
-    model="gemini-1.5-flash",
+    model="gemini-1.5-flash-002",
     contents=prompt,
 )
 
