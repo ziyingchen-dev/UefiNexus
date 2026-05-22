@@ -1,16 +1,12 @@
 import sys
 import os
-import google.genai as genai
+from google import genai
 
 api_key = os.environ.get("GEMINI_API_KEY")
 
 if not api_key:
     print("GEMINI_API_KEY is not set")
     sys.exit(1)
-
-genai.configure(api_key=api_key)
-
-model = genai.GenerativeModel("gemini-2.0-flash")
 
 if len(sys.argv) != 2:
     print("usage: ai_review.py <diff-file>")
@@ -55,6 +51,11 @@ Git diff:
 {diff}
 """
 
-response = model.generate_content(prompt)
+client = genai.Client(api_key=api_key)
+
+response = client.models.generate_content(
+    model="gemini-2.0-flash",
+    contents=prompt,
+)
 
 print(response.text)
