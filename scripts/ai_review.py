@@ -1,6 +1,6 @@
 import sys
 import os
-import google.generativeai as genai
+import google.genai as genai
 
 api_key = os.environ.get("GEMINI_API_KEY")
 
@@ -10,7 +10,7 @@ if not api_key:
 
 genai.configure(api_key=api_key)
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 if len(sys.argv) != 2:
     print("usage: ai_review.py <diff-file>")
