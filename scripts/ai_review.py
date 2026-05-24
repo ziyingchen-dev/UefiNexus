@@ -57,7 +57,7 @@ Git diff:
 client = genai.Client(api_key=api_key)
 
 response = client.models.generate_content(
-    model="gemini-1.5-flash-002",
+    model="gemini-2.5-flash",
     contents=prompt,
 )
 
