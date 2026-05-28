@@ -1,0 +1,79 @@
+name: EDK2 Firmware Build
+
+on:
+  pull_request:
+    branches: [main]
+    # 可選：只在 firmware 相關檔案變動時才跑，避免每個 PR 都跑很久
+    paths:
+      - "UefiNexusPkg/**"
+      - "scripts/build.sh"
+      - "docs/build.md"
+      - ".github/workflows/**"
+  push:
+    branches: [main]
+    paths:
+      - "UefiNexusPkg/**"
+      - "scripts/build.sh"
+      - "docs/build.md"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+jobs:
+  edk2-build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm]
+
+    env:
+      # 建議 pin 版本，避免 master 變動造成 CI 忽然壞掉
+      # 你也可以改成 master 或特定 commit
+      EDK2_REF: edk2-stable202605
+      EDK2_PATH: ${{ github.workspace }}/edk2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git build-essential python3 python3-distutils python3-setuptools \
+            nasm acpica-tools uuid-dev
+          if [ "${{ matrix.arch }}" = "arm" ]; then
+            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          fi
+
+      - name: Clone edk2 (with submodules)
+        run: |
+          git clone --branch "${EDK2_REF}" --depth 1 --recurse-submodules https://github.com/tianocore/edk2.git "${EDK2_PATH}"
+
+      - name: Setup edk2 environment + build BaseTools
+        shell: bash
+        run: |
+          set -e
+          cd "${EDK2_PATH}"
+          source edksetup.sh
+          make -C BaseTools
+
+      - name: Build firmware via repo script
+        shell: bash
+        run: |
+          set -e
+          cd "${GITHUB_WORKSPACE}"
+          # 你的 docs/build.md 指出可用 EDK2_PATH 覆蓋位置
+          export EDK2_PATH="${EDK2_PATH}"
+          ./scripts/build.sh "${{ matrix.arch }}"
+
+      # 可選：把 build 產物打包成 artifact，方便 PR 檢視
+      - name: Upload artifacts (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-build-${{ matrix.arch }}
+          path: |
+            build/**
+            edk2/Build/**
+          if-no-files-found: ignore
