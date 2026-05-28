@@ -6,9 +6,8 @@ The main example today is a layered memory viewer/editor under `UefiNexusPkg/`.
 
 ## Start Here
 
-- deprecated package note: [UefiNexusPkg/README.md](UefiNexusPkg/README.md)
 - main example: `PageMem`
-- longer design notes: `UefiNexusPkg/docs/`
+- longer design notes: [UefiNexusPkg/docs/architecture.md](UefiNexusPkg/docs/architecture.md)
 
 ## What This Repo Shows
 
@@ -39,47 +38,4 @@ Rules:
 
 ## Details
 
-See [UefiNexusPkg/README.md](UefiNexusPkg/README.md) for package notes.
-
 Build, test, and QEMU commands live in [docs/build.md](docs/build.md).
-
-## Environment Setup
-
-Clone EDK II beside this repository:
-
-```bash
-git clone --depth 1 https://github.com/tianocore/edk2.git
-```
-
-Initialize EDK II once:
-
-```bash
-cd edk2
-
-git submodule update --init
-
-source edksetup.sh
-
-make -C BaseTools
-```
-
-Then return to this repository:
-
-```bash
-cd ~/UefiNexus
-```
-
-Build firmware:
-
-```bash
-./scripts/build.sh x64
-./scripts/build.sh arm
-```
-
-Launch QEMU:
-
-```bash
-./scripts/qemu.sh x64
-./scripts/qemu.sh arm
-```
-
