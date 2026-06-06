@@ -72,9 +72,7 @@ Notes:
 
 CI:
 - `Core unit tests` run automatically on pull requests via GitHub Actions (workflow: .github/workflows/core-unit-tests.yml).
-- `Host integration tests` are heavier and are not run automatically on every PR. To run them from CI:
-    - Add the label `run-host-tests` to the pull request, or
-    - Run the `Host Integration Tests` workflow manually from the Actions tab (workflow: .github/workflows/host-test.yml).
+- `Host integration tests` run automatically on pull requests targeting `main` and on pushes to `main` (workflow: .github/workflows/host-test.yml). These integration tests exercise end-to-end host behavior and are run both pre-merge (PR) and post-merge (push) to help catch regressions.
 
 You can also trigger the host tests locally with:
 
