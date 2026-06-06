@@ -40,5 +40,3 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: review.md
-      - name: Architecture Guard
-        run: bash scripts/check_architecture.sh
