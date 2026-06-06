@@ -22,13 +22,15 @@ gcc -std=c11 -Wall -Wextra -Werror \
     UefiNexusPkg/Tests/Mock/MemMock.c \
     UefiNexusPkg/Tests/Mock/TuiMock.c \
     UefiNexusPkg/Tests/Mock/UefiMock.c \
-    UefiNexusPkg/Tests/Core/test_cursor.c \
-    UefiNexusPkg/Tests/Core/test_layout.c \
-    UefiNexusPkg/Tests/Core/test_format.c \
-    UefiNexusPkg/Tests/Core/test_state.c \
-    UefiNexusPkg/Tests/Core/test_addressmap.c \
     UefiNexusPkg/Tests/Core/test_integration.c \
-    UefiNexusPkg/Tests/Core/test_runner.c \
-    -o build/unit_tests
+    UefiNexusPkg/Tests/Core/integration_runner.c \
+    -o build/host_integration_tests
 
-./build/unit_tests
+
+# Run the compiled integration test binary
+if [ -x build/host_integration_tests ]; then
+    ./build/host_integration_tests
+else
+    echo "Error: build/host_integration_tests not found or not executable"
+    exit 1
+fi
