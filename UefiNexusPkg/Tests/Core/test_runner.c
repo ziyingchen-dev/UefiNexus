@@ -21,8 +21,12 @@ main(void)
     RunFormatTests();
     RunStateTests();
     RunAddressMapTests();
-    RunIntegrationTests();
 
+#ifdef CORE_UNIT_TEST
+    printf("\nCore-only tests complete.\n");
+#else
+    RunIntegrationTests();
     printf("\nAll requested test groups have finished.\n");
+#endif
     return 0;
 }

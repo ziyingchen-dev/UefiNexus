@@ -210,9 +210,26 @@ The controller processes user input, Core performs state updates and validation,
 View renders page content only when NeedsRedraw is set, and Adapter implementations provide access to memory
 operations and UEFI services.
 
+## Test Model
+
+- `Core unit tests` validate pure Core logic, without UEFI or UI dependencies.
+- `Host integration tests` validate Core and UI interaction on the host, using mocks or stubs to isolate firmware/TUI dependencies.
+- Firmware tests cover the actual UEFI runtime path and should be run separately in QEMU or on real hardware.
+
+How to run (from repository root):
+
+```bash
+# Run Core-only unit tests (fast, platform-agnostic)
+./scripts/core-unit-test.sh
+
+# Run Host integration tests (Core + UI with mocks)
+./scripts/host-test.sh
+```
+
 ## Implementation Notes
 
-- Host tests should target Core and higher layers without requiring UEFI runtime.
+- Core unit tests should target Core-only behavior and remain platform-agnostic.
+- Host integration tests should target Core + UI interaction without requiring UEFI runtime.
 - The active runtime path uses the layered PageMem implementation rather than legacy monolithic PageMem.
 - Adapter implementations isolate UEFI-specific APIs from Core logic.
 - UI should coordinate input handling and rendering.

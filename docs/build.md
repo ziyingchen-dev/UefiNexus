@@ -5,7 +5,8 @@ This is the single source of truth for build instructions.
 ---
 
 ## Scope
-- Host unit test build
+- Core unit test build
+- Host integration test build
 - EDK II firmware build
 - QEMU run flow
 
@@ -17,7 +18,17 @@ Do not duplicate build instructions elsewhere.
 
 ---
 
-## Host Unit Test Build
+## Core Unit Test Build
+
+Run from repository root.
+
+```bash
+./scripts/core-unit-test.sh
+```
+
+---
+
+## Host Integration Test Build
 
 Run from repository root.
 
