@@ -1,3 +1,14 @@
+
+/** @file
+  UefiNexus application entry and main flow.
+
+  This module initializes console state, presents a page menu, dispatches
+  selected page entry points, and restores console state on exit.
+
+  Copyright (c) 2026, ziyingchen-dev
+  SPDX-License-Identifier: BSD-2-Clause-Patent
+**/
+
 #include <Uefi.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
@@ -6,6 +17,12 @@
 #include "Pages/PageMenu.h"
 #include "Pages/PageRegistry.h"
 
+/**
+  Application context used by the UefiNexus application.
+
+  This structure stores the initial image and system table handles,
+  cached console state, and the boot service table pointer.
+**/
 typedef struct {
     EFI_HANDLE         ImageHandle;
     EFI_SYSTEM_TABLE  *SystemTable;
@@ -15,9 +32,19 @@ typedef struct {
     INT32              Attribute;
 } APP_CONTEXT;
 
+/**
+  Initialize application context and prepare the console state.
+
+  @param[in,out] App  Pointer to the application context structure.
+
+  @retval EFI_SUCCESS         The application context was initialized.
+  @retval EFI_UNSUPPORTED     The required console output interface is unavailable.
+**/
 STATIC
 EFI_STATUS
-AppInit(APP_CONTEXT *App)
+AppInit(
+    IN OUT APP_CONTEXT *App
+)
 {
     ASSERT(App != NULL);
 
@@ -34,9 +61,18 @@ AppInit(APP_CONTEXT *App)
     return EFI_SUCCESS;
 }
 
+/**
+  Run the main application loop and dispatch the selected page entry point.
+
+  @param[in] App  Pointer to the initialized application context.
+
+  @retval EFI_SUCCESS  The main loop completed successfully.
+**/
 STATIC
 EFI_STATUS
-AppRun(APP_CONTEXT *App)
+AppRun(
+    IN APP_CONTEXT *App
+)
 {
     INTN Sel;
     UINTN PageCount;
@@ -61,9 +97,16 @@ AppRun(APP_CONTEXT *App)
     return EFI_SUCCESS;
 }
 
+/**
+  Restore the console state and clean up application state.
+
+  @param[in] App  Pointer to the initialized application context.
+**/
 STATIC
 VOID
-AppDeinit(APP_CONTEXT *App)
+AppDeinit(
+    IN APP_CONTEXT *App
+)
 {
     ASSERT(App != NULL);
 

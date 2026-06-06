@@ -1,41 +1,47 @@
 # UefiNexus
 
-UEFI tool playground focused on modular design and host-side testability.
+UefiNexus is a modular UEFI tooling project focused on
+testable architecture and maintainable firmware design.
 
-The main example today is a layered memory viewer/editor under `UefiNexusPkg/`.
+The current reference implementation is PageMem,
+a layered memory viewer/editor demonstrating how
+Core logic can be isolated from UEFI-specific code.
 
-## Start Here
+## Features
 
-- main example: `PageMem`
-- longer design notes: [UefiNexusPkg/docs/architecture.md](UefiNexusPkg/docs/architecture.md)
-
-## What This Repo Shows
-
-- `Core + Adapter + UI` layering for firmware tools
-- host-side tests with mocks and lightweight shims
-- an EDK II buildable UEFI application
+- Application / UI / Core / Adapter layering
+- Unit tests runnable on Linux hosts
+- EDK II buildable UEFI application
 - QEMU-based firmware simulation
+- Platform-independent Core logic
 
 ## Architecture
 
 ```text
-Application
+Application → UI → Core → Adapter → UEFI
+
+Runtime Model:
+
+Controller Loop
     ↓
-UI
+Input Handling (UI Controller)
     ↓
-Core
+Core State Update
     ↓
-Adapter
+Mark NeedsRedraw
     ↓
-UEFI services / libraries
+View Render (only if NeedsRedraw = true)
+    ↓
+Adapter → UEFI Services
 ```
 
 Rules:
 
 - `Core` must not depend on `UI` or `Adapter`
-- `Adapter` owns external calls
-- `UI` orchestrates behavior rather than owning business logic
+- `Adapter` owns UEFI interactions
+- `UI` coordinates rendering and input handling
 
-## Details
+## Documentation
 
-Build, test, and QEMU commands live in [docs/build.md](docs/build.md).
+- Architecture guide: [docs/architecture.md](docs/architecture.md)
+- build and QEMU usage: [docs/build.md](docs/build.md)

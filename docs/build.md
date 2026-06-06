@@ -22,7 +22,7 @@ Do not duplicate build instructions elsewhere.
 Run from repository root.
 
 ```bash
-./scripts/test.sh
+./scripts/host-test.sh
 ```
 
 ---
