@@ -2,9 +2,9 @@
 
 set -e
 
-# Host integration test driver.
-# This script validates Core + UI layer interaction on a Linux host
-# using mocks for firmware/TUI dependencies.
+# Core unit test driver.
+# This script validates only Core layer logic on a Linux host,
+# with no UEFI or UI runtime dependencies.
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -13,6 +13,7 @@ cd "$REPO_ROOT"
 mkdir -p build
 
 gcc -std=c11 -Wall -Wextra -Werror \
+    -DCORE_UNIT_TEST \
     -I UefiNexusPkg/Tests/HostShim \
     -I UefiNexusPkg \
     UefiNexusPkg/Core/Mem/CursorEngine.c \
@@ -20,19 +21,12 @@ gcc -std=c11 -Wall -Wextra -Werror \
     UefiNexusPkg/Core/Mem/FormatEngine.c \
     UefiNexusPkg/Core/Mem/AddressMap.c \
     UefiNexusPkg/Core/Mem/StateMachine.c \
-    UefiNexusPkg/UI/Pages/PageMem/PageMemView.c \
-    UefiNexusPkg/UI/Pages/PageMem/PageMemController.c \
-    UefiNexusPkg/UI/Pages/PageMem/PageMemActions.c \
-    UefiNexusPkg/Tests/Mock/MemMock.c \
-    UefiNexusPkg/Tests/Mock/TuiMock.c \
-    UefiNexusPkg/Tests/Mock/UefiMock.c \
     UefiNexusPkg/Tests/Core/test_cursor.c \
     UefiNexusPkg/Tests/Core/test_layout.c \
     UefiNexusPkg/Tests/Core/test_format.c \
     UefiNexusPkg/Tests/Core/test_state.c \
     UefiNexusPkg/Tests/Core/test_addressmap.c \
-    UefiNexusPkg/Tests/Core/test_integration.c \
     UefiNexusPkg/Tests/Core/test_runner.c \
-    -o build/host_integration_tests
+    -o build/core_unit_tests
 
-./build/host_integration_tests
+./build/core_unit_tests
