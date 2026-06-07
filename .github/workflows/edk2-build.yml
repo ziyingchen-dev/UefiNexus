@@ -1,0 +1,79 @@
+name: EDK2 Firmware Build
+
+on:
+  pull_request:
+    branches: [main]
+    # Optional: only run when firmware-related files change to avoid long CI runs on every PR
+    paths:
+      - "UefiNexusPkg/**"
+      - "scripts/build.sh"
+      - "docs/build.md"
+      - ".github/workflows/**"
+  push:
+    branches: [main]
+    paths:
+      - "UefiNexusPkg/**"
+      - "scripts/build.sh"
+      - "docs/build.md"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+jobs:
+  edk2-build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm]
+
+    env:
+      # Pin the EDK II version to avoid unexpected CI failures caused by upstream master changes
+      # You can also change this to master or a specific commit
+      EDK2_REF: edk2-stable202605
+      EDK2_PATH: ${{ github.workspace }}/edk2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git build-essential python3 python3-setuptools \
+            nasm acpica-tools uuid-dev
+          if [ "${{ matrix.arch }}" = "arm" ]; then
+            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          fi
+
+      - name: Clone edk2 (with submodules)
+        run: |
+          git clone --branch "${EDK2_REF}" --depth 1 --recurse-submodules https://github.com/tianocore/edk2.git "${EDK2_PATH}"
+
+      - name: Setup edk2 environment + build BaseTools
+        shell: bash
+        run: |
+          set -e
+          cd "${EDK2_PATH}"
+          source edksetup.sh
+          make -C BaseTools
+
+      - name: Build firmware via repo script
+        shell: bash
+        run: |
+          set -e
+          cd "${GITHUB_WORKSPACE}"
+          # docs/build.md documents that EDK2_PATH can override the default edk2 location
+          export EDK2_PATH="${EDK2_PATH}"
+          ./scripts/build.sh "${{ matrix.arch }}"
+
+      # Optional: upload build outputs as artifacts for easier PR inspection
+      - name: Upload artifacts (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-build-${{ matrix.arch }}
+          path: |
+            build/**
+            edk2/Build/**
+          if-no-files-found: ignore

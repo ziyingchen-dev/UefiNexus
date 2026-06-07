@@ -1,0 +1,31 @@
+name: Core Unit Tests
+
+on:
+  pull_request:
+    # Run quick core-only tests for every PR against main
+    branches: [main]
+
+jobs:
+  core-unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Run core unit tests
+        run: bash scripts/core-unit-test.sh
+
+      - name: Upload logs (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-unit-test-logs
+          path: |
+            build/**
+            *.log
+          if-no-files-found: ignore
