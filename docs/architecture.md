@@ -219,6 +219,21 @@ operations and UEFI services.
 
 How to run (from repository root):
 
+## Example Pages / Samples
+
+The repository includes a small disabled-by-default sample page that demonstrates the layered page structure and minimal runtime flow. It is provided as a reference for contributors implementing new tools and is not considered a production feature.
+
+- Location: `UefiNexusPkg/UI/Pages/PageDemo/` (controller + view) and `UefiNexusPkg/Application/UefiNexus/Pages/PageDemoLayered.c` (page entry)
+- Core placeholder header: `UefiNexusPkg/Core/PageDemoCore.h`
+
+To enable the sample for local firmware testing undo the two default disables:
+
+1. Remove the `#` comment for the `PageDemo` source lines in `UefiNexusPkg/Application/UefiNexus/UefiNexus.inf`.
+2. Restore the `PageDemo` registration in `UefiNexusPkg/Application/UefiNexus/Pages/PageRegistry.c` (uncomment the `extern` and the `mPages` entry).
+
+After enabling, run the normal EDK II build and QEMU flow to select "Demo Shell" from the application menu.
+
+
 ```bash
 # Run Core-only unit tests (fast, platform-agnostic)
 ./scripts/core-unit-test.sh

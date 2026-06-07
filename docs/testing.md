@@ -160,6 +160,16 @@ UefiNexus testing prioritizes:
 * Fast host execution over full firmware simulation
 * Real firmware validation over deep HostShim emulation
 
+## Using the PageDemo sample for manual testing
+
+`PageDemo` is a small, disabled-by-default example page useful for manual firmware/QEMU testing of the layered runtime flow (controller → view → adapter). To exercise it:
+
+1. Follow the steps in `docs/build.md` under "Enabling the PageDemo sample" to enable the sample in the `.inf` and `PageRegistry.c`.
+2. Build and run the firmware in QEMU, then choose "Demo Shell" from the tool menu to exercise the sample.
+
+For host integration testing of page UI flows, create targeted host tests under `UefiNexusPkg/Tests/` that include the `PageDemo` headers and use the existing mock adapters. Keep these tests separate from default CI host tests unless you intentionally want the sample exercised in CI.
+
+
 ---
 
 ## Future Improvements

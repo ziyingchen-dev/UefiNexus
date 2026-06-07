@@ -11,6 +11,7 @@
   Pages/PageMenu.c
   Pages/PageRegistry.c
   Pages/PageMemLayered.c
+# Pages/PageDemoLayered.c
   ../../Core/Mem/CursorEngine.c
   ../../Core/Mem/LayoutEngine.c
   ../../Core/Mem/FormatEngine.c
@@ -19,6 +20,8 @@
   ../../UI/Pages/PageMem/PageMemView.c
   ../../UI/Pages/PageMem/PageMemController.c
   ../../UI/Pages/PageMem/PageMemActions.c
+# ../../UI/Pages/PageDemo/PageDemoController.c
+# ../../UI/Pages/PageDemo/PageDemoView.c
   ../../Adapter/Uefi/MemAdapter.c
   ../../Adapter/Uefi/TuiAdapter.c
   ../../Adapter/Uefi/ErrorAdapter.c

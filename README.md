@@ -122,6 +122,29 @@ These workflows assume the prerequisites above; CI jobs install build dependenci
 * Architecture Guide: docs/architecture.md
 * Build Guide: docs/build.md
 
+## Adding a New Tool Module
+
+New diagnostic pages should follow the layered UefiNexus architecture and reuse the PageMem reference implementation as a template.
+
+1. Add the page entry and registration in `UefiNexusPkg/Application/UefiNexus/Pages/`.
+   - Create a new `PageXyzLayered.c` for the page runtime path.
+   - Register the new page in `PageRegistry.c` and add a menu entry in `PageMenu.c`.
+2. Implement platform-independent business logic in `UefiNexusPkg/Core/`.
+   - Define new core types and APIs in header files.
+   - Keep Core code free of UI, Adapter, and UEFI dependencies.
+3. Implement the UI layer in `UefiNexusPkg/UI/Pages/PageXyz/`.
+   - Add view rendering, controller dispatch, and action handlers.
+   - Use the Adapter layer for input and output only.
+4. Extend the Adapter layer only when the new tool requires additional firmware services.
+   - Adapter code belongs in `UefiNexusPkg/Adapter/` and should expose clean, testable interfaces.
+5. Add tests for the new page.
+   - Core unit tests should validate pure Core logic without UEFI or Adapter dependencies.
+   - Host integration tests should validate controller/view flow with adapter mocks.
+
+The existing PageMem implementation is the reference pattern for new modules. A small sample shell page has also been added at `UefiNexusPkg/UI/Pages/PageDemo/` as a disabled-by-default example of the layered page structure.
+
+See `docs/architecture.md` for layout and flow details.
+
 ## Long-Term Vision
 
 UefiNexus is intended to evolve into a collection of firmware diagnostic and platform exploration tools built on a common architecture and testing framework.

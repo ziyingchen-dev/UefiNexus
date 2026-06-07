@@ -101,7 +101,32 @@ Launch firmware in QEMU.
 
 ./scripts/qemu.sh starts noVNC on port 6080. Open vnc.html to interact with the guest.
 
----
+
+## Enabling the PageDemo sample (optional)
+
+The repository ships a small example page (`PageDemo`) as a disabled-by-default reference. To enable it for local firmware testing:
+
+1. Edit `UefiNexusPkg/Application/UefiNexus/UefiNexus.inf` and remove the leading `#` from these source lines (or restore them if commented):
+
+```text
+Pages/PageDemoLayered.c
+../../UI/Pages/PageDemo/PageDemoController.c
+../../UI/Pages/PageDemo/PageDemoView.c
+```
+
+2. Edit `UefiNexusPkg/Application/UefiNexus/Pages/PageRegistry.c` and uncomment the `extern VOID PageDemoLayered(VOID);` and the `{ L"Demo Shell", PageDemoLayered },` entry in `mPages`.
+
+3. Rebuild the firmware and run in QEMU as usual:
+
+```bash
+./scripts/build.sh x64
+./scripts/qemu.sh x64
+```
+
+Notes:
+- The sample is provided for developer reference and learning — keep it disabled in CI or production builds unless intentionally exercising the sample.
+- If you encounter stale build artifacts, run the build command again; cleaning build outputs is optional and environment-specific.
+
 
 ## Concerns / Suggestions
 - Host test includes UI layer for integration coverage through project-native mocks
