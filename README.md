@@ -1,82 +1,127 @@
 # UefiNexus
 
-UefiNexus is a modular UEFI tooling project focused on
-testable architecture and maintainable firmware design.
+UefiNexus is an experimental UEFI framework focused on modular architecture, testability, and maintainable firmware development.
 
-The current reference implementation is PageMem,
-a layered memory viewer/editor demonstrating how
-Core logic can be isolated from UEFI-specific code.
+The project aims to provide a reusable foundation for building firmware tools such as memory viewers, PCIe explorers, SMBIOS browsers, and other platform diagnostics while keeping business logic isolated from UEFI-specific implementations.
 
-## Features
+## Current Status
 
-- Application / UI / Core / Adapter layering
-- Core unit tests runnable on Linux hosts
-- Host integration tests runnable on Linux hosts with mocks
-- EDK II buildable UEFI application
-- QEMU-based firmware simulation
-- Platform-independent Core logic
+Implemented:
+
+* PageMem (memory viewer/editor)
+* Layered architecture
+* Host-side unit testing
+* Host-side integration testing
+* GitHub Actions CI
+* QEMU-based validation
+
+Planned:
+
+* PCIe Explorer
+* SMBIOS Explorer
+* ACPI Explorer
+* Additional platform diagnostics modules
+
+PageMem serves as the reference implementation for validating the framework architecture.
+
+## Design Goals
+
+* Keep Core logic independent from UEFI runtime services
+* Enable fast host-side testing without firmware execution
+* Separate business logic from platform-specific code
+* Improve maintainability and scalability of firmware applications
+* Support future diagnostic modules through a shared framework
 
 ## Architecture
 
 ```text
 Application → UI → Core → Adapter → UEFI
+```
 
-Runtime Model:
+### Runtime Flow
 
+```text
 Controller Loop
     ↓
-Input Handling (UI Controller)
+Input Handling
     ↓
 Core State Update
     ↓
 Mark NeedsRedraw
     ↓
-View Render (only if NeedsRedraw = true)
+View Render
     ↓
 Adapter → UEFI Services
 ```
 
-Rules:
+### Layer Responsibilities
 
-- `Core` must not depend on `UI` or `Adapter`
-- `Adapter` owns UEFI interactions
-- `UI` coordinates rendering and input handling
+| Layer       | Responsibility                              |
+| ----------- | ------------------------------------------- |
+| Application | Page registration and application lifecycle |
+| UI          | Input handling and rendering                |
+| Core        | Platform-independent business logic         |
+| Adapter     | Platform abstraction and service access     |
+| UEFI        | Firmware runtime environment                |
 
-## Documentation
+### Rules
 
-- Architecture guide: [docs/architecture.md](docs/architecture.md)
-- build, unit test, and integration test usage: [docs/build.md](docs/build.md)
+* Core must not depend on UI or Adapter
+* Adapter owns all UEFI interactions
+* UI coordinates rendering and user input
+* Core logic should remain host-testable
 
 ## Testing
 
-This repository separates fast Core unit tests from host-side integration tests.
+The project separates firmware-independent validation from firmware execution.
 
-- `Core unit tests`: validate pure Core logic (no UEFI runtime). Run:
+### Core Unit Tests
+
+Validate pure Core logic without requiring a UEFI environment.
 
 ```bash
 ./scripts/core-unit-test.sh
 ```
 
-- `Host integration tests`: validate Core + UI interaction on the host using mocks/stubs
-    for firmware/TUI dependencies. Run:
+### Host Integration Tests
+
+Validate interaction between UI, Core, and mocked platform services.
 
 ```bash
 ./scripts/host-test.sh
 ```
 
-Notes:
-- `core-unit-test.sh` compiles and runs only Core-layer tests using `HostShim` for
-    compile-time types.
-- `host-test.sh` builds an integration binary that runs `RunIntegrationTests()` and
-    uses mock adapters to avoid requiring a UEFI runtime.
+## Prerequisites
 
-CI:
-- `Core unit tests` run automatically on pull requests via GitHub Actions (workflow: .github/workflows/core-unit-tests.yml).
-- `Host integration tests` run automatically on pull requests targeting `main` and on pushes to `main` (workflow: .github/workflows/host-test.yml). These integration tests exercise end-to-end host behavior and are run both pre-merge (PR) and post-merge (push) to help catch regressions.
+Before running tests locally or in CI, ensure the following are available on the runner/machine:
 
-You can also trigger the host tests locally with:
+* `gcc` / `build-essential` (for compiling host tests)
+* `scripts/core-unit-test.sh` and `scripts/host-test.sh` present and executable
+* (Optional) `GEMINI_API_KEY` secret for AI review jobs
 
-```bash
-# Manually run host integration tests locally
-bash scripts/host-test.sh
-```
+## Continuous Integration
+
+GitHub Actions automatically execute the project workflows:
+
+* Core unit tests — [.github/workflows/core-unit-tests.yml](.github/workflows/core-unit-tests.yml)
+* Host integration tests — [.github/workflows/host-test.yml](.github/workflows/host-test.yml)
+* AI review (optional) — [.github/workflows/ai-review.yml](.github/workflows/ai-review.yml)
+
+These workflows assume the prerequisites above; CI jobs install build dependencies (e.g. `build-essential`) where required.
+
+## Documentation
+
+* Architecture Guide: docs/architecture.md
+* Build Guide: docs/build.md
+
+## Long-Term Vision
+
+UefiNexus is intended to evolve into a collection of firmware diagnostic and platform exploration tools built on a common architecture and testing framework.
+
+Example future modules:
+
+* PagePCIe
+* PageSMBIOS
+* PageACPI
+* PageMTRR
+* PageCPUID
