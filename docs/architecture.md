@@ -212,9 +212,10 @@ operations and UEFI services.
 
 ## Test Model
 
-- `Core unit tests` validate pure Core logic, without UEFI or UI dependencies.
-- `Host integration tests` validate Core and UI interaction on the host, using mocks or stubs to isolate firmware/TUI dependencies.
-- Firmware tests cover the actual UEFI runtime path and should be run separately in QEMU or on real hardware.
+- `Core unit tests` validate pure Core logic only, without UI, Adapter, UEFI headers, or HostShim.
+- `Host integration tests` validate UI + Core flow on the host using project-native Adapter mocks, without HostShim or real UEFI services.
+- `Adapter shim tests` are optional boundary tests for UEFI Adapter or Bridge code. These may use HostShim, but stay separate from default host tests.
+- `Firmware / QEMU tests` cover the actual EDK II / UEFI runtime path and should be run separately in QEMU or on real hardware.
 
 How to run (from repository root):
 
@@ -222,14 +223,15 @@ How to run (from repository root):
 # Run Core-only unit tests (fast, platform-agnostic)
 ./scripts/core-unit-test.sh
 
-# Run Host integration tests (Core + UI with mocks)
+# Run Host integration tests (UI + Core with project-native mocks)
 ./scripts/host-test.sh
 ```
 
 ## Implementation Notes
 
 - Core unit tests should target Core-only behavior and remain platform-agnostic.
-- Host integration tests should target Core + UI interaction without requiring UEFI runtime.
+- Host integration tests should target UI + Core interaction through project-native Adapter mocks, without requiring UEFI runtime or HostShim.
+- HostShim should be reserved for optional Adapter shim tests that host-compile UEFI Adapter or Bridge boundaries.
 - The active runtime path uses the layered PageMem implementation rather than legacy monolithic PageMem.
 - Adapter implementations isolate UEFI-specific APIs from Core logic.
 - UI should coordinate input handling and rendering.

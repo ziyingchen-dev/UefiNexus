@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include "../../Core/PageMemCore.h"
+#include "test_common.h"
 
 #define ASSERT_EQ(actual, expected, test_name) \
     do { \
@@ -22,15 +23,6 @@
             return 0; \
         } else { \
             printf("[PASS] %s\n", test_name); \
-        } \
-    } while (0)
-
-#define TEST(func, name) \
-    do { \
-        if (!(func)()) { \
-            printf("\nTest %s FAILED\n", name); \
-        } else { \
-            printf("\nTest %s PASSED\n", name); \
         } \
     } while (0)
 

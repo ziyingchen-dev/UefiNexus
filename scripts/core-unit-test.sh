@@ -9,7 +9,6 @@ cd "$REPO_ROOT"
 mkdir -p build
 
 gcc -std=c11 -Wall -Wextra -Werror -DCORE_UNIT_TEST \
-    -I UefiNexusPkg/Tests/HostShim \
     -I UefiNexusPkg \
     UefiNexusPkg/Core/Mem/CursorEngine.c \
     UefiNexusPkg/Core/Mem/LayoutEngine.c \

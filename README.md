@@ -77,7 +77,7 @@ The project separates firmware-independent validation from firmware execution.
 
 ### Core Unit Tests
 
-Validate pure Core logic without requiring a UEFI environment.
+Validate pure Core logic only. These tests compile Core modules directly and do not use UI, Adapter, UEFI headers, or HostShim.
 
 ```bash
 ./scripts/core-unit-test.sh
@@ -85,11 +85,19 @@ Validate pure Core logic without requiring a UEFI environment.
 
 ### Host Integration Tests
 
-Validate interaction between UI, Core, and mocked platform services.
+Validate UI + Core flow using project-native Adapter mocks. These tests cover controller/action/view interactions without real UEFI services and without HostShim.
 
 ```bash
 ./scripts/host-test.sh
 ```
+
+### Adapter Shim Tests
+
+Optional adapter-boundary tests may use HostShim to host-compile UEFI Adapter or Bridge code. HostShim is reserved for this boundary and is not part of Core unit tests or default host integration tests.
+
+### Firmware / QEMU Tests
+
+Firmware validation builds the real EDK II application and runs the real UEFI path in QEMU or on hardware.
 
 ## Prerequisites
 

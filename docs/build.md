@@ -7,6 +7,7 @@ This is the single source of truth for build instructions.
 ## Scope
 - Core unit test build
 - Host integration test build
+- Optional Adapter shim test build
 - EDK II firmware build
 - QEMU run flow
 
@@ -26,6 +27,8 @@ Run from repository root.
 ./scripts/core-unit-test.sh
 ```
 
+This build is Core-only and must not depend on HostShim, UI, Adapter implementations, or UEFI headers.
+
 ---
 
 ## Host Integration Test Build
@@ -35,6 +38,16 @@ Run from repository root.
 ```bash
 ./scripts/host-test.sh
 ```
+
+This build validates UI + Core behavior with project-native Adapter mocks. It should not depend on HostShim or real UEFI services.
+
+---
+
+## Optional Adapter Shim Test Build
+
+Adapter shim tests are optional boundary tests for host-compiling UEFI Adapter or Bridge code. They may use HostShim, but they should remain separate from `core-unit-test.sh` and `host-test.sh`.
+
+No default Adapter shim test script is currently required by the standard host test flow.
 
 ---
 
@@ -91,6 +104,6 @@ Launch firmware in QEMU.
 ---
 
 ## Concerns / Suggestions
-- Host test includes UI layer for integration coverage
+- Host test includes UI layer for integration coverage through project-native mocks
 - Core layer should remain platform-agnostic (no OS/UEFI calls)
-- Future improvement: split UI from unit test binary for stricter isolation
+- HostShim should be reserved for optional Adapter shim tests, not default Core or host integration tests

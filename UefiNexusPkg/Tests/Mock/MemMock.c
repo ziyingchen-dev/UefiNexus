@@ -2,25 +2,24 @@
  * MemMock.c - Mock implementation of Memory Adapter for testing
  */
 
-#include <Uefi.h>
 #include "../../Adapter/AdapterInterface.h"
 
-STATIC UINT64 gMockMemoryBuffer[256];  // Simulate 256 8-byte values
-STATIC BOOLEAN gMockMemoriesInitialized = FALSE;
-STATIC PM_MEMORY_DESCRIPTOR gMockDescriptors[2] = {
+static PM_U64 gMockMemoryBuffer[256];  // Simulate 256 8-byte values
+static PM_BOOL gMockMemoriesInitialized = PM_FALSE;
+static PM_MEMORY_DESCRIPTOR gMockDescriptors[2] = {
     { PM_MEM_CONVENTIONAL, 0x1000, 1, 0 },
     { PM_MEM_OTHER, 0x2000, 1, 0 },
 };
 
-STATIC PM_UI_STATUS MockMemInit(VOID);
-BOOLEAN MockMemIsAddressValid(UINT64 Address);
-STATIC PM_U64 MockMemRead(PM_U64 Address, PM_UINTN Width);
-STATIC PM_UI_STATUS MockMemWrite(PM_U64 Address, PM_UINTN Width, PM_U64 Value);
-STATIC CONST PM_MEMORY_DESCRIPTOR* MockMemGetMemoryMapDescriptors(PM_UINTN *DescriptorCount);
-STATIC VOID MockMemDumpValidRanges(VOID);
-STATIC UINTN gMockDumpCallCount = 0;
+static PM_UI_STATUS MockMemInit(void);
+static PM_BOOL MockMemIsAddressValid(PM_U64 Address);
+static PM_U64 MockMemRead(PM_U64 Address, PM_UINTN Width);
+static PM_UI_STATUS MockMemWrite(PM_U64 Address, PM_UINTN Width, PM_U64 Value);
+static const PM_MEMORY_DESCRIPTOR* MockMemGetMemoryMapDescriptors(PM_UINTN *DescriptorCount);
+static void MockMemDumpValidRanges(void);
+static PM_UINTN gMockDumpCallCount = 0;
 
-STATIC MEMORY_ADAPTER_INTERFACE mMemoryAdapterMock = {
+static MEMORY_ADAPTER_INTERFACE mMemoryAdapterMock = {
     .Init = MockMemInit,
     .MemRead = MockMemRead,
     .MemWrite = MockMemWrite,
@@ -28,19 +27,19 @@ STATIC MEMORY_ADAPTER_INTERFACE mMemoryAdapterMock = {
     .DumpValidRanges = MockMemDumpValidRanges,
 };
 
-STATIC
+static
 PM_UI_STATUS
-MockMemInit(VOID)
+MockMemInit(void)
 {
     // Initialize mock buffer with test pattern
     for (int i = 0; i < 256; i++) {
         gMockMemoryBuffer[i] = 0x0102030405060708 + i;
     }
-    gMockMemoriesInitialized = TRUE;
+    gMockMemoriesInitialized = PM_TRUE;
     return PM_UI_SUCCESS;
 }
 
-STATIC
+static
 PM_U64
 MockMemRead(PM_U64 Address, PM_UINTN Width)
 {
@@ -56,7 +55,7 @@ MockMemRead(PM_U64 Address, PM_UINTN Width)
     return gMockMemoryBuffer[Index];
 }
 
-STATIC
+static
 PM_UI_STATUS
 MockMemWrite(PM_U64 Address, PM_UINTN Width, PM_U64 Value)
 {
@@ -75,8 +74,8 @@ MockMemWrite(PM_U64 Address, PM_UINTN Width, PM_U64 Value)
     return PM_UI_SUCCESS;
 }
 
-STATIC
-CONST PM_MEMORY_DESCRIPTOR*
+static
+const PM_MEMORY_DESCRIPTOR*
 MockMemGetMemoryMapDescriptors(PM_UINTN *DescriptorCount)
 {
     if (DescriptorCount != NULL) {
@@ -86,9 +85,9 @@ MockMemGetMemoryMapDescriptors(PM_UINTN *DescriptorCount)
     return gMockDescriptors;
 }
 
-STATIC
-VOID
-MockMemDumpValidRanges(VOID)
+static
+void
+MockMemDumpValidRanges(void)
 {
     gMockDumpCallCount++;
 }
@@ -97,22 +96,22 @@ MockMemDumpValidRanges(VOID)
  * Get mock memory adapter
  */
 MEMORY_ADAPTER_INTERFACE*
-GetMockMemoryAdapter(VOID)
+GetMockMemoryAdapter(void)
 {
     return &mMemoryAdapterMock;
 }
 
-BOOLEAN
-MockMemIsAddressValid(UINT64 Address)
+static PM_BOOL
+MockMemIsAddressValid(PM_U64 Address)
 {
-    return Address >= 0x1000 && Address < 0x1000 + (256 * 8);
+    return (Address >= 0x1000 && Address < 0x1000 + (256 * 8)) ? PM_TRUE : PM_FALSE;
 }
 
 /**
  * Set mock memory value for testing
  */
-VOID
-MockMemorySetValue(UINT64 Address, UINT64 Value)
+void
+MockMemorySetValue(PM_U64 Address, PM_U64 Value)
 {
     MockMemWrite(Address, 8, Value);
 }
@@ -120,21 +119,21 @@ MockMemorySetValue(UINT64 Address, UINT64 Value)
 /**
  * Get mock memory value for verification
  */
-UINT64
-MockMemoryGetValue(UINT64 Address)
+PM_U64
+MockMemoryGetValue(PM_U64 Address)
 {
     return MockMemRead(Address, 8);
 }
 
-UINTN
-MockMemoryGetDumpCallCount(VOID)
+PM_UINTN
+MockMemoryGetDumpCallCount(void)
 {
     return gMockDumpCallCount;
 }
 
-VOID
-MockMemoryReset(VOID)
+void
+MockMemoryReset(void)
 {
-    gMockMemoriesInitialized = FALSE;
+    gMockMemoriesInitialized = PM_FALSE;
     gMockDumpCallCount = 0;
 }

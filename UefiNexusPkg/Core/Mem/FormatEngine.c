@@ -3,12 +3,6 @@
  * Pure business logic - formats data to strings
  */
 
-#ifdef EFIAPI
-#include <Library/PrintLib.h>
-#else
-#include <stdio.h>
-#endif
-
 #include "../PageMemCoreTypes.h"
 #include "../PageMemCore.h"
 
@@ -157,13 +151,19 @@ PageMemCoreFormatAddress(
     PM_UINTN BufferSize
     )
 {
+    PM_UINTN Index;
+
     if (Buffer == NULL || BufferSize < 19) {
         return;
     }
 
-#ifdef EFIAPI
-    AsciiSPrint(Buffer, BufferSize, "0x%016llX", Address);
-#else
-    snprintf(Buffer, BufferSize, "0x%016llX", (unsigned long long)Address);
-#endif
+    Buffer[0] = '0';
+    Buffer[1] = 'x';
+    for (Index = 0; Index < 16; Index++) {
+        PM_UINTN Shift;
+
+        Shift = (15 - Index) * 4;
+        Buffer[Index + 2] = mHexChars[(Address >> Shift) & 0x0F];
+    }
+    Buffer[18] = '\0';
 }

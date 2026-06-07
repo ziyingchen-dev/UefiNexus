@@ -9,7 +9,6 @@ cd "$REPO_ROOT"
 mkdir -p build
 
 gcc -std=c11 -Wall -Wextra -Werror \
-    -I UefiNexusPkg/Tests/HostShim \
     -I UefiNexusPkg \
     UefiNexusPkg/Core/Mem/CursorEngine.c \
     UefiNexusPkg/Core/Mem/LayoutEngine.c \
@@ -21,7 +20,7 @@ gcc -std=c11 -Wall -Wextra -Werror \
     UefiNexusPkg/UI/Pages/PageMem/PageMemActions.c \
     UefiNexusPkg/Tests/Mock/MemMock.c \
     UefiNexusPkg/Tests/Mock/TuiMock.c \
-    UefiNexusPkg/Tests/Mock/UefiMock.c \
+    UefiNexusPkg/Tests/Mock/ErrorMock.c \
     UefiNexusPkg/Tests/Core/test_integration.c \
     UefiNexusPkg/Tests/Core/integration_runner.c \
     -o build/host_integration_tests

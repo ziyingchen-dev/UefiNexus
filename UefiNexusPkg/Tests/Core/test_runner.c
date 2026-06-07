@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 
+int gTestFailures = 0;
+
 void RunCursorTests(void);
 void RunLayoutTests(void);
 void RunFormatTests(void);
@@ -28,5 +30,10 @@ main(void)
     RunIntegrationTests();
     printf("\nAll requested test groups have finished.\n");
 #endif
+    if (gTestFailures != 0) {
+        printf("\n%d test group(s) failed.\n", gTestFailures);
+        return 1;
+    }
+
     return 0;
 }
