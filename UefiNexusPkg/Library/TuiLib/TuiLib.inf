@@ -1,0 +1,22 @@
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = TuiLib
+  FILE_GUID                      = 9ED52ED8-E92D-48DD-8DCF-46327CBD29DC
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = TuiLib
+
+[Sources]
+  TuiScreen.c
+  TuiInput.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  UefiNexusPkg/UefiNexusPkg.dec
+
+[Protocols]
+  gEfiSimpleTextInputExProtocolGuid
+
+[LibraryClasses]
+  UefiLib
+  UefiBootServicesTableLib
