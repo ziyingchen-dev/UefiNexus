@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+
+name: Host Integration Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  host-integration-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GCC
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Run host integration tests
+        run: bash scripts/host-integration-test.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-integration-test-artifacts
+          path: |
+            build/**
+            *.log
+          if-no-files-found: ignore
