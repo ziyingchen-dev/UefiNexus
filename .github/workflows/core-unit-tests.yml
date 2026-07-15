@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+
+name: Page Core Unit Tests
+
+on:
+  pull_request:
+    # Run quick page core tests for every PR against main
+    branches: [main]
+
+jobs:
+  page-core-unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Run page core unit tests
+        run: bash scripts/core-unit-test.sh
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: page-core-unit-test-logs
+          path: |
+            build/**
+            *.log
+          if-no-files-found: ignore
