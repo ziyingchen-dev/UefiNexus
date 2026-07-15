@@ -1,0 +1,11 @@
+[Defines]
+  DEC_SPECIFICATION              = 0x0001001A
+  PACKAGE_NAME                   = UefiNexusPkg
+  PACKAGE_GUID                   = 9f4b8a11-52f7-4f7f-9e02-4d9b1b5d1001
+  PACKAGE_VERSION                = 0.1
+
+[Includes]
+  Include
+  Adapter
+  UI/Pages/PageMem
+  Core
