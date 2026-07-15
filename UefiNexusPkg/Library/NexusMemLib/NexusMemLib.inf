@@ -1,0 +1,20 @@
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = NexusMemLib
+  FILE_GUID                      = FA46F410-C30E-4684-93B7-9809E0409490
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = NexusMemLib
+
+[Sources]
+  MemMap.c
+  MemAccess.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  UefiNexusPkg/UefiNexusPkg.dec
+
+[LibraryClasses]
+  UefiBootServicesTableLib
+  BaseLib
+  UefiLib
