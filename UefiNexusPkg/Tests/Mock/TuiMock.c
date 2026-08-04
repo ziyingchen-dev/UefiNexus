@@ -204,6 +204,18 @@ GetMockTuiAdapter(void)
     return &mTuiAdapterMock;
 }
 
+/*
+  Append captured text output to the host-side mock TUI buffer.
+  This is the symbol expected by HostStubs.c and test harnesses.
+*/
+void
+MockTuiAppendString(
+    const NX_UI_CHAR *String
+    )
+{
+    MockTuiOutputString(String);
+}
+
 /**
   Retrieve the mock screen buffer for verification.
 

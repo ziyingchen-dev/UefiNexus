@@ -35,6 +35,27 @@
 STATIC
 inline
 UINTN
+UnicodeVSPrint(
+    OUT CHAR16      *Buffer,
+    IN UINTN         BufferSize,
+    IN CONST CHAR16 *Format,
+    IN VA_LIST       Marker
+    )
+{
+    int Result;
+
+    if (Buffer == NULL || BufferSize == 0 || Format == NULL) {
+        return 0;
+    }
+
+    Result = vswprintf(Buffer, BufferSize / sizeof(CHAR16), Format, Marker);
+
+    return (Result < 0) ? 0 : (UINTN)Result;
+}
+
+STATIC
+inline
+UINTN
 UnicodeSPrint(
     OUT CHAR16      *Buffer,
     IN UINTN         BufferSize,

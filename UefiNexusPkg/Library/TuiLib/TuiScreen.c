@@ -10,7 +10,39 @@
 
 #include <Uefi.h>
 #include <Library/UefiLib.h>
+#include <Library/PrintLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <stdarg.h>
+
+/*
+  Formatted output helper for TuiLib.
+
+  This formats into a local buffer and emits via `Print()` so host-side
+  tests (where `Print` redirects to `MockPrintCapture`) receive the same
+  output.
+*/
+VOID
+TuiPrintf(
+  CONST CHAR16 *Format,
+  ...
+  )
+{
+  CHAR16 Buffer[1024];
+  UINTN Result;
+  VA_LIST Args;
+
+  if (Format == NULL) {
+    return;
+  }
+
+  VA_START(Args, Format);
+  Result = UnicodeVSPrint(Buffer, sizeof(Buffer), Format, Args);
+  VA_END(Args);
+
+  if (Result > 0) {
+    Print(L"%s", Buffer);
+  }
+}
 
 VOID
 TuiClearScreen(
@@ -25,7 +57,7 @@ TuiDrawHeader(
   CONST CHAR16 *Title
   )
 {
-  Print(L"%s\n\n", Title);
+  TuiPrintf(L"%s\n\n", Title);
 }
 
 VOID
@@ -33,7 +65,7 @@ TuiDrawFooter(
   CONST CHAR16 *Help
   )
 {
-  Print(L"\n%s\n", Help);
+  TuiPrintf(L"\n%s\n", Help);
 }
 
 VOID

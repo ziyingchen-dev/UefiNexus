@@ -11,6 +11,8 @@ mkdir -p build
 
 gcc -std=c11 -Wall -Wextra -Werror \
     -I UefiNexusPkg \
+    -I UefiNexusPkg/Include \
+    -I UefiNexusPkg/Tests/HostShim \
     UefiNexusPkg/UI/Pages/PageMem/Core/CursorEngine.c \
     UefiNexusPkg/UI/Pages/PageMem/Core/LayoutEngine.c \
     UefiNexusPkg/UI/Pages/PageMem/Core/FormatEngine.c \
@@ -22,6 +24,7 @@ gcc -std=c11 -Wall -Wextra -Werror \
     UefiNexusPkg/Tests/Mock/MemMock.c \
     UefiNexusPkg/Tests/Mock/TuiMock.c \
     UefiNexusPkg/Tests/Mock/ErrorMock.c \
+    UefiNexusPkg/Tests/HostShim/HostStubs.c \
     UefiNexusPkg/Tests/Core/test_integration.c \
     UefiNexusPkg/Tests/Core/integration_runner.c \
     -o build/host-integration-test

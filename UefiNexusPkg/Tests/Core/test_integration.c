@@ -13,6 +13,7 @@
 
 #include "../../Adapter/AdapterInterface.h"
 #include "../../UI/Pages/PageMem/PageMemLayered.h"
+#include <Include/Library/TuiLib.h>
 #include "test_common.h"
 
 //
@@ -451,6 +452,32 @@ TestViewDrawWidth4(void)
     return NX_TRUE;
 }
 
+//
+// Validate TuiLib console state wrappers.
+//
+static
+NX_BOOL
+TestTuiLibConsoleStateWrappers(void)
+{
+    BOOLEAN SavedVisible;
+    UINTN   SavedAttribute;
+
+    TuiEnableCursor(TRUE);
+    TuiSetAttribute(0x1F);
+
+    TuiSaveConsoleState(&SavedVisible, &SavedAttribute);
+
+    TuiEnableCursor(FALSE);
+    TuiSetAttribute(0x07);
+
+    TuiRestoreConsoleState(SavedVisible, SavedAttribute);
+
+    ASSERT_TRUE(TuiGetCursorVisible() == TRUE, "Cursor visibility restored");
+    ASSERT_EQ(TuiGetAttribute(), 0x1F, "Text attribute restored");
+
+    return NX_TRUE;
+}
+
 /**
   Run all PageMem layered integration tests.
 **/
@@ -472,6 +499,7 @@ RunIntegrationTests(void)
     TEST(TestViewDraw, "View Draw");
     TEST(TestViewDrawWidth2, "View Draw Width 2");
     TEST(TestViewDrawWidth4, "View Draw Width 4");
+    TEST(TestTuiLibConsoleStateWrappers, "TuiLib Console State Wrappers");
 
     printf("\n=== Layered Integration Tests Complete ===\n");
 }

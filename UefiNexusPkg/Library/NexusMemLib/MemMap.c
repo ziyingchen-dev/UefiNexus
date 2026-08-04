@@ -466,12 +466,12 @@ DumpMemoryRanges(
 
   TuiClearScreen();
 
-  Print(L"Memory ranges\n\n");
-  Print(L"%-7ls  %-20ls  %-16ls  %ls\n",
-        L"Tag",
-        L"Type",
-        L"Start",
-        L"Pages");
+    TuiPrintf(L"Memory ranges\n\n");
+    TuiPrintf(L"%-7ls  %-20ls  %-16ls  %ls\n",
+      L"Tag",
+      L"Type",
+      L"Start",
+      L"Pages");
 
   for (UINTN Index = 0; Index < Count; Index++) {
     EFI_MEMORY_DESCRIPTOR *Desc;
@@ -495,7 +495,7 @@ DumpMemoryRanges(
 
     Start = Desc->PhysicalStart;
 
-    Print(L"%-7ls  %-20ls  %016llX  %llu\n",
+        TuiPrintf(L"%-7ls  %-20ls  %016llX  %llu\n",
           Tag,
           MemoryTypeToStr(Desc->Type),
           Start,
@@ -505,26 +505,26 @@ DumpMemoryRanges(
     if ((Printed % 16) == 0) {
       EFI_INPUT_KEY Key;
 
-      Print(L"\nPress ESC to quit or other keys to continue...");
+      TuiPrintf(L"\nPress ESC to quit or other keys to continue...");
       Key = TuiReadKey();
       if (Key.ScanCode == SCAN_ESC) {
         return;
       }
 
       TuiClearScreen();
-      Print(L"Memory ranges\n\n");
-      Print(L"%-7ls  %-20ls  %-16ls  %ls\n",
-            L"Tag",
-            L"Type",
-            L"Start",
-            L"Pages");
+      TuiPrintf(L"Memory ranges\n\n");
+      TuiPrintf(L"%-7ls  %-20ls  %-16ls  %ls\n",
+        L"Tag",
+        L"Type",
+        L"Start",
+        L"Pages");
     }
   }
 
   if (Printed == 0) {
-    Print(L"(none)\n");
+    TuiPrintf(L"(none)\n");
   }
 
-  Print(L"\nPress any key to return...");
+  TuiPrintf(L"\nPress any key to return...");
   TuiWaitForKeyPress();
 }

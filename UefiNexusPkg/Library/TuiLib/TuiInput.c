@@ -13,6 +13,7 @@
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Protocol/SimpleTextInEx.h>
+#include <Library/TuiLib.h>
 
 /**
   Get the Simple Text Input Ex protocol from the active console input handle.
@@ -122,13 +123,13 @@ TuiReadHex(
 
             if (Index < MaxDigits) {
                 Buffer[Index++] = Key.UnicodeChar;
-                Print(L"%c", Key.UnicodeChar);
+                TuiPrintf(L"%c", Key.UnicodeChar);
             }
         }
 
         if (Key.UnicodeChar == CHAR_BACKSPACE && Index > 0) {
             Index--;
-            Print(L"\b \b");
+            TuiPrintf(L"\b \b");
         }
     }
 }

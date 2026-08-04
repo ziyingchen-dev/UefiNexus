@@ -32,17 +32,17 @@ DrawMenu(
 {
     TuiClearScreen();
 
-    Print(L"UefiNexus Tool Menu\n\n");
+    TuiPrintf(L"UefiNexus Tool Menu\n\n");
 
     for (UINTN Index = 0; Index < PageCount; Index++) {
         if (Index == Selected) {
-            Print(L"> %u. %s\n", (UINT32)(Index + 1), Pages[Index].Title);
+            TuiPrintf(L"> %u. %s\n", (UINT32)(Index + 1), Pages[Index].Title);
         } else {
-            Print(L"  %u. %s\n", (UINT32)(Index + 1), Pages[Index].Title);
+            TuiPrintf(L"  %u. %s\n", (UINT32)(Index + 1), Pages[Index].Title);
         }
     }
 
-    Print(L"\nUp/Down: Navigate  Enter: Select  Esc: Exit\n");
+    TuiPrintf(L"\nUp/Down: Navigate  Enter: Select  Esc: Exit\n");
 }
 
 INTN

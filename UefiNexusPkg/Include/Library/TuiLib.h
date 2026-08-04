@@ -80,6 +80,18 @@ TuiDrawFooter(
   );
 
 /**
+  Formatted output to the console using TuiLib helpers.
+
+  This prints formatted wide-character text to the active console or mock
+  capture used by host tests.
+*/
+VOID
+TuiPrintf(
+  CONST CHAR16 *Format,
+  ...
+  );
+
+/**
   Set console text attribute.
 
   @param[in] Attribute  Console text attribute.

@@ -186,7 +186,7 @@ UefiBridgeTuiOutputString(
     const NX_UI_CHAR *String
     )
 {
-    Print((CONST CHAR16 *)String);
+    TuiPrintf(L"%s", (CONST CHAR16 *)String);
 }
 
 void
@@ -197,7 +197,7 @@ UefiBridgeTuiOutputStringAt(
     )
 {
     TuiSetCursorPosition(Column, Row);
-    Print((CONST CHAR16 *)String);
+    TuiPrintf(L"%s", (CONST CHAR16 *)String);
 }
 
 void
@@ -288,5 +288,5 @@ UefiBridgeReportError(
     NX_UI_STATUS      Status
     )
 {
-    Print(L"\n[ERROR] %s (Status: 0x%x)\n", (CONST CHAR16 *)Message, Status);
+    TuiPrintf(L"\n[ERROR] %s (Status: 0x%x)\n", (CONST CHAR16 *)Message, Status);
 }

@@ -9,7 +9,6 @@
   SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
-#include <Uefi.h>
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -106,6 +105,9 @@ EFI_BOOT_SERVICES mHostBootServices = {
 
 EFI_BOOT_SERVICES *gBS = &mHostBootServices;
 
+static BOOLEAN gHostCursorVisible = FALSE;
+static UINTN   gHostTextAttribute  = 0;
+
 VOID
 TuiClearScreen(
     VOID
@@ -143,7 +145,7 @@ TuiSetAttribute(
     UINTN Attribute
     )
 {
-    (void)Attribute;
+    gHostTextAttribute = Attribute;
 }
 
 VOID
@@ -161,7 +163,7 @@ TuiEnableCursor(
     BOOLEAN Visible
     )
 {
-    (void)Visible;
+    gHostCursorVisible = Visible;
 }
 
 BOOLEAN
@@ -169,7 +171,7 @@ TuiGetCursorVisible(
     VOID
     )
 {
-    return FALSE;
+    return gHostCursorVisible;
 }
 
 UINTN
@@ -177,7 +179,7 @@ TuiGetAttribute(
     VOID
     )
 {
-    return 0;
+    return gHostTextAttribute;
 }
 
 VOID
@@ -187,11 +189,11 @@ TuiSaveConsoleState(
     )
 {
     if (CursorVisible != NULL) {
-        *CursorVisible = FALSE;
+        *CursorVisible = gHostCursorVisible;
     }
 
     if (Attribute != NULL) {
-        *Attribute = 0;
+        *Attribute = gHostTextAttribute;
     }
 }
 
@@ -201,9 +203,10 @@ TuiRestoreConsoleState(
     IN UINTN   Attribute
     )
 {
-    (void)CursorVisible;
-    (void)Attribute;
+    gHostCursorVisible = CursorVisible;
+    gHostTextAttribute = Attribute;
 }
+ 
 
 /**
   Host-side Print() implementation.
@@ -211,9 +214,9 @@ TuiRestoreConsoleState(
   This captures formatted wide-character output and forwards it into the mock
   TUI capture buffer for tests.
 **/
-UINTN
-Print(
-    IN CONST CHAR16 *Format,
+void
+MockPrintCapture(
+    const wchar_t *Format,
     ...
     )
 {
@@ -222,7 +225,7 @@ Print(
     va_list Args;
 
     if (Format == NULL) {
-        return 0;
+        return;
     }
 
     va_start(Args, Format);
@@ -232,6 +235,4 @@ Print(
     if (Result > 0) {
         MockTuiAppendString(Buffer);
     }
-
-    return (Result < 0) ? 0 : (UINTN)Result;
 }
