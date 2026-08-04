@@ -13,6 +13,7 @@
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DebugLib.h>
+#include <Library/TuiLib.h>
 
 #include "Pages/PageMenu.h"
 #include "Pages/PageRegistry.h"
@@ -26,7 +27,7 @@ typedef struct {
     EFI_HANDLE ImageHandle;
 
     BOOLEAN    CursorVisible;
-    INT32      Attribute;
+    UINTN      Attribute;
 } APP_CONTEXT;
 
 /**
@@ -49,11 +50,10 @@ AppInit(
         return EFI_UNSUPPORTED;
     }
 
-    App->CursorVisible = gST->ConOut->Mode->CursorVisible;
-    App->Attribute     = gST->ConOut->Mode->Attribute;
+    TuiSaveConsoleState(&App->CursorVisible, &App->Attribute);
 
-    gST->ConOut->ClearScreen(gST->ConOut);
-    gST->ConOut->EnableCursor(gST->ConOut, FALSE);
+    TuiClearScreen();
+    TuiEnableCursor(FALSE);
 
     return EFI_SUCCESS;
 }
@@ -111,9 +111,8 @@ AppDeinit(
         return;
     }
 
-    gST->ConOut->EnableCursor(gST->ConOut, App->CursorVisible);
-    gST->ConOut->SetAttribute(gST->ConOut, App->Attribute);
-    gST->ConOut->ClearScreen(gST->ConOut);
+    TuiRestoreConsoleState(App->CursorVisible, App->Attribute);
+    TuiClearScreen();
 }
 
 /**

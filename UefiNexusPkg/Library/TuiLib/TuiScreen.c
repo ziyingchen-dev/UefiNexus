@@ -52,3 +52,60 @@ TuiSetCursorPosition(
 {
   gST->ConOut->SetCursorPosition(gST->ConOut, Column, Row);
 }
+
+VOID
+TuiEnableCursor(
+  BOOLEAN Visible
+  )
+{
+  gST->ConOut->EnableCursor(gST->ConOut, Visible);
+}
+
+BOOLEAN
+TuiGetCursorVisible(
+  VOID
+  )
+{
+  if (gST == NULL || gST->ConOut == NULL || gST->ConOut->Mode == NULL) {
+    return FALSE;
+  }
+
+  return gST->ConOut->Mode->CursorVisible;
+}
+
+UINTN
+TuiGetAttribute(
+  VOID
+  )
+{
+  if (gST == NULL || gST->ConOut == NULL || gST->ConOut->Mode == NULL) {
+    return 0;
+  }
+
+  return gST->ConOut->Mode->Attribute;
+}
+
+VOID
+TuiSaveConsoleState(
+  OUT BOOLEAN *CursorVisible,
+  OUT UINTN   *Attribute
+  )
+{
+  if (CursorVisible != NULL) {
+    *CursorVisible = TuiGetCursorVisible();
+  }
+
+  if (Attribute != NULL) {
+    *Attribute = TuiGetAttribute();
+  }
+}
+
+VOID
+TuiRestoreConsoleState(
+  IN BOOLEAN CursorVisible,
+  IN UINTN   Attribute
+  )
+{
+  TuiEnableCursor(CursorVisible);
+  TuiSetAttribute(Attribute);
+}

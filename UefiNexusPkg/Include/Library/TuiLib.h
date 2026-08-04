@@ -101,4 +101,59 @@ TuiSetCursorPosition(
   UINTN Row
   );
 
+/**
+  Enable or disable the console cursor.
+
+  @param[in] Visible  TRUE to show the cursor, FALSE to hide it.
+**/
+VOID
+TuiEnableCursor(
+  BOOLEAN Visible
+  );
+
+/**
+  Get the current console cursor visibility state.
+
+  @retval TRUE   Cursor is visible.
+  @retval FALSE  Cursor is hidden.
+**/
+BOOLEAN
+TuiGetCursorVisible(
+  VOID
+  );
+
+/**
+  Get the current console text attribute.
+
+  @retval Current console text attribute.
+**/
+UINTN
+TuiGetAttribute(
+  VOID
+  );
+
+/**
+  Save current console state.
+
+  @param[out] CursorVisible  Receives current cursor visibility.
+  @param[out] Attribute      Receives current text attribute.
+**/
+VOID
+TuiSaveConsoleState(
+  OUT BOOLEAN *CursorVisible,
+  OUT UINTN   *Attribute
+  );
+
+/**
+  Restore console state.
+
+  @param[in] CursorVisible  Cursor visibility to restore.
+  @param[in] Attribute      Text attribute to restore.
+**/
+VOID
+TuiRestoreConsoleState(
+  IN BOOLEAN CursorVisible,
+  IN UINTN   Attribute
+  );
+
 #endif

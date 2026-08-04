@@ -156,6 +156,55 @@ TuiSetCursorPosition(
     (void)Row;
 }
 
+VOID
+TuiEnableCursor(
+    BOOLEAN Visible
+    )
+{
+    (void)Visible;
+}
+
+BOOLEAN
+TuiGetCursorVisible(
+    VOID
+    )
+{
+    return FALSE;
+}
+
+UINTN
+TuiGetAttribute(
+    VOID
+    )
+{
+    return 0;
+}
+
+VOID
+TuiSaveConsoleState(
+    OUT BOOLEAN *CursorVisible,
+    OUT UINTN   *Attribute
+    )
+{
+    if (CursorVisible != NULL) {
+        *CursorVisible = FALSE;
+    }
+
+    if (Attribute != NULL) {
+        *Attribute = 0;
+    }
+}
+
+VOID
+TuiRestoreConsoleState(
+    IN BOOLEAN CursorVisible,
+    IN UINTN   Attribute
+    )
+{
+    (void)CursorVisible;
+    (void)Attribute;
+}
+
 /**
   Host-side Print() implementation.
 
