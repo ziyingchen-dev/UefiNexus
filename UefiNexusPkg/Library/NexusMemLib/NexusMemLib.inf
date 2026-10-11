@@ -9,6 +9,7 @@
 [Sources]
   MemMap.c
   MemAccess.c
+  ../../Core/UefiMemoryType.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -18,3 +19,6 @@
   UefiBootServicesTableLib
   BaseLib
   UefiLib
+
+[Protocols]
+  gEfiMemoryAttributeProtocolGuid

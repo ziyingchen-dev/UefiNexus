@@ -35,6 +35,11 @@ static NX_UINTN  gMockKeyTail = 0;
 static NX_U64   gMockNextHexValue = 0;
 static NX_BOOL  gMockReadHexShouldSucceed = NX_TRUE;
 static NX_UINTN gMockLastReadHexMaxDigits = 0;
+static NX_UI_CHAR gMockNextReadHexEcho[17];
+static NX_UI_CHAR gMockReadHexScreenRow[81];
+static NX_UI_CHAR gMockReadHexEchoedScreenRow[81];
+static NX_UINTN gMockReadHexColumn = 0;
+static NX_UINTN gMockReadHexRow = 0;
 
 static void MockTuiClearScreen(void);
 static void MockTuiSetAttribute(NX_UINTN Attribute);
@@ -167,10 +172,26 @@ MockTuiReadHex(
     )
 {
     gMockLastReadHexMaxDigits = MaxDigits;
+    gMockReadHexColumn = gMockCursorColumn;
+    gMockReadHexRow = gMockCursorRow;
+    for (NX_UINTN Index = 0; Index < gMockScreenWidth; Index++) {
+        gMockReadHexScreenRow[Index] =
+            gMockScreenBuffer[gMockCursorRow * gMockScreenWidth + Index];
+    }
+    gMockReadHexScreenRow[gMockScreenWidth] = L'\0';
 
     if (Value != NULL) {
         *Value = gMockNextHexValue;
     }
+
+    if (gMockReadHexShouldSucceed) {
+        MockTuiOutputString(gMockNextReadHexEcho);
+    }
+    for (NX_UINTN Index = 0; Index < gMockScreenWidth; Index++) {
+        gMockReadHexEchoedScreenRow[Index] =
+            gMockScreenBuffer[gMockReadHexRow * gMockScreenWidth + Index];
+    }
+    gMockReadHexEchoedScreenRow[gMockScreenWidth] = L'\0';
 
     return gMockReadHexShouldSucceed;
 }
@@ -278,6 +299,46 @@ MockTuiGetLastReadHexMaxDigits(void)
     return gMockLastReadHexMaxDigits;
 }
 
+void
+MockTuiSetNextReadHexEcho(
+    const NX_UI_CHAR *Echo
+    )
+{
+    NX_UINTN Index;
+
+    for (Index = 0; Index < (sizeof(gMockNextReadHexEcho) / sizeof(gMockNextReadHexEcho[0])) - 1 &&
+                     Echo != NULL && Echo[Index] != L'\0'; Index++) {
+        gMockNextReadHexEcho[Index] = Echo[Index];
+    }
+    gMockNextReadHexEcho[Index] = L'\0';
+}
+
+void
+MockTuiGetReadHexCursorPosition(
+    NX_UINTN *Column,
+    NX_UINTN *Row
+    )
+{
+    if (Column != NULL) {
+        *Column = gMockReadHexColumn;
+    }
+    if (Row != NULL) {
+        *Row = gMockReadHexRow;
+    }
+}
+
+const NX_UI_CHAR *
+MockTuiGetReadHexScreenRow(void)
+{
+    return gMockReadHexScreenRow;
+}
+
+const NX_UI_CHAR *
+MockTuiGetReadHexEchoedScreenRow(void)
+{
+    return gMockReadHexEchoedScreenRow;
+}
+
 /**
   Reset mock TUI state.
 **/
@@ -289,6 +350,11 @@ MockTuiReset(void)
     gMockNextHexValue = 0;
     gMockReadHexShouldSucceed = NX_TRUE;
     gMockLastReadHexMaxDigits = 0;
+    gMockNextReadHexEcho[0] = L'\0';
+    gMockReadHexScreenRow[0] = L'\0';
+    gMockReadHexEchoedScreenRow[0] = L'\0';
+    gMockReadHexColumn = 0;
+    gMockReadHexRow = 0;
 
     MockTuiClearScreen();
 }

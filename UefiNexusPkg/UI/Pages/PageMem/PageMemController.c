@@ -10,6 +10,52 @@
 **/
 
 #include "PageMemLayered.h"
+#include "../../../Core/UefiMemoryType.h"
+
+static
+NX_UI_STATUS
+PageMemControllerUpdatePageType(
+    PAGEMEM_PAGE_STATE *PageState,
+    ADAPTER_MANAGER    *Adapters
+    )
+{
+    NX_UI_STATUS Status;
+
+    if (Adapters->Memory->GetMemoryTypeAtAddress == NULL) {
+        Adapters->Error->ReportError(
+            L"Memory type lookup is unavailable",
+            NX_UI_NOT_FOUND
+            );
+        return NX_UI_NOT_FOUND;
+    }
+
+    Status = Adapters->Memory->GetMemoryTypeAtAddress(
+                                 PageState->CursorState.Address,
+                                 &PageState->PageUefiMemoryType,
+                                 &PageState->PageHasMemoryDescriptor
+                                 );
+    if (NX_UI_ERROR(Status)) {
+        Adapters->Error->ReportError(L"Memory type lookup failed", Status);
+        return Status;
+    }
+
+    PageState->PageAccess.QueryStatus    = NX_UI_NOT_FOUND;
+    PageState->PageAccess.Attributes     = 0;
+    PageState->PageAccess.ReadAllowed    = NX_FALSE;
+    PageState->PageAccess.WriteAllowed   = NX_FALSE;
+    PageState->PageAccess.ExecuteAllowed = NX_FALSE;
+    PageState->PageAccess.AccessKnown    = NX_FALSE;
+
+    if (Adapters->Memory->QueryAccess != NULL) {
+        Adapters->Memory->QueryAccess(
+            PageState->CursorState.Address,
+            PAGE_SIZE,
+            &PageState->PageAccess
+            );
+    }
+
+    return NX_UI_SUCCESS;
+}
 
 /**
   Convert Core status values to UI status values.
@@ -81,8 +127,16 @@ PageMemControllerInit(
     //
     FirstAddress = PageCoreGetFirstValidAddress(&State->AddressMap);
     CoreStatus   = PageCoreInitPageState(State, FirstAddress);
+    if (CoreStatus != NX_STATUS_SUCCESS) {
+        return PageMemStatusToUi(CoreStatus);
+    }
 
-    return PageMemStatusToUi(CoreStatus);
+    Status = PageMemControllerUpdatePageType(State, Adapters);
+    if (NX_UI_ERROR(Status)) {
+        return Status;
+    }
+
+    return NX_UI_SUCCESS;
 }
 
 NX_UI_STATUS
@@ -95,12 +149,14 @@ PageMemControllerHandleKeyPress(
     NX_UI_STATUS Status;
     NX_INTN      Delta;
     NX_UINTN     OldOffset;
+    NX_U64       OldPageAddress;
 
     if (PageState == NULL || Adapters == NULL) {
         return NX_UI_INVALID_PARAMETER;
     }
 
     OldOffset = PageState->CursorState.Offset;
+    OldPageAddress = PageState->CursorState.Address;
     Delta     = 0;
 
     //
@@ -172,15 +228,20 @@ PageMemControllerHandleKeyPress(
         PageCoreTransitionState(PageState, STATE_GOTO);
         Status = PageMemActionGotoAddress(PageState, Adapters);
         PageCoreTransitionState(PageState, STATE_VIEWING);
+        if (Status == NX_UI_SUCCESS && PageState->CursorState.Address != OldPageAddress) {
+            Status = PageMemControllerUpdatePageType(PageState, Adapters);
+        }
         return Status;
 
     case L'n':
     case L'N':
-        return PageMemActionPageDown(PageState, Adapters);
+        Status = PageMemActionPageDown(PageState, Adapters);
+        break;
 
     case L'p':
     case L'P':
-        return PageMemActionPageUp(PageState, Adapters);
+        Status = PageMemActionPageUp(PageState, Adapters);
+        break;
 
     case L'r':
     case L'R':
@@ -201,6 +262,12 @@ PageMemControllerHandleKeyPress(
     default:
         return NX_UI_NOT_FOUND;
     }
+
+    if (Status == NX_UI_SUCCESS && PageState->CursorState.Address != OldPageAddress) {
+        Status = PageMemControllerUpdatePageType(PageState, Adapters);
+    }
+
+    return Status;
 }
 
 NX_UI_STATUS

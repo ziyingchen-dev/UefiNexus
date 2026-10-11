@@ -13,6 +13,16 @@
 #define _NEXUS_MEM_LIB_H_
 
 #include <Uefi.h>
+#include <Protocol/MemoryAttribute.h>
+
+typedef struct {
+  EFI_STATUS QueryStatus;
+  UINT64     Attributes;
+  BOOLEAN    ReadAllowed;
+  BOOLEAN    WriteAllowed;
+  BOOLEAN    ExecuteAllowed;
+  BOOLEAN    AccessKnown;
+} EFI_MEMORY_ACCESS_INFO;
 
 /**
   Initialize and cache the current UEFI memory map.
@@ -27,12 +37,29 @@ InitMemoryMap(
   );
 
 /**
-  Check whether a physical address is inside a valid memory descriptor.
+  Query access attributes for a complete physical memory range.
+
+  QueryStatus records the optional firmware attribute query status. Effective
+  read/write permissions always include NexusMemLib's existing memory-type
+  policy; successful firmware attributes can only restrict those permissions.
+  Missing or failed firmware attributes do not make an otherwise known tool
+  policy unknown.
+**/
+EFI_STATUS
+EFIAPI
+QueryMemoryAccess(
+  UINT64                   BaseAddress,
+  UINT64                   Length,
+  OUT EFI_MEMORY_ACCESS_INFO *AccessInfo
+  );
+
+/**
+  Check whether a physical address is inside a readable memory descriptor.
 
   @param[in] Address  Physical address to check.
 
-  @retval TRUE   Address is inside a valid memory descriptor.
-  @retval FALSE  Address is not inside a valid memory descriptor.
+  @retval TRUE   Address is inside a readable memory descriptor.
+  @retval FALSE  Address is not inside a readable memory descriptor.
 **/
 BOOLEAN
 EFIAPI
@@ -41,17 +68,29 @@ IsAddressValid(
   );
 
 /**
-  Check whether a physical address range is fully inside valid memory.
+  Check whether a physical memory range is fully readable.
 
   @param[in] Address  Physical start address.
   @param[in] Size     Range size in bytes.
 
-  @retval TRUE   Entire range is valid.
-  @retval FALSE  Range is invalid or crosses an invalid boundary.
+  @retval TRUE   Entire range is readable.
+  @retval FALSE  Range is unreadable or crosses a descriptor boundary.
 **/
 BOOLEAN
 EFIAPI
 IsRangeValid(
+  UINT64 Address,
+  UINTN  Size
+  );
+
+/**
+  Check whether a physical memory range may be written.
+
+  ACPI and MMIO ranges are intentionally not writable through NexusMemLib.
+**/
+BOOLEAN
+EFIAPI
+IsRangeWritable(
   UINT64 Address,
   UINTN  Size
   );
@@ -62,8 +101,8 @@ IsRangeValid(
   @param[in] Address   Address inside or at the start of the page.
   @param[in] PageSize  Page size in bytes.
 
-  @retval TRUE   Full page is valid.
-  @retval FALSE  Page is invalid.
+  @retval TRUE   Full page is browsable, including MMIO pages.
+  @retval FALSE  Page is not fully contained in one browsable descriptor.
 **/
 BOOLEAN
 EFIAPI
@@ -73,9 +112,9 @@ IsPageValid(
   );
 
 /**
-  Get the first valid physical address from the cached memory map.
+  Get the first browsable physical address from the cached memory map.
 
-  @return First valid physical address, or 0 if no valid range exists.
+  @return First browsable physical address, or 0 if no browsable range exists.
 **/
 UINT64
 EFIAPI
@@ -84,12 +123,12 @@ GetFirstValidAddress(
   );
 
 /**
-  Get the next valid page address after the current address.
+  Get the next browsable page address after the current address.
 
   @param[in] Address   Current physical address.
   @param[in] PageSize  Page size in bytes.
 
-  @return Next valid page address, or current page address if none exists.
+  @return Next browsable page address, or current page address if none exists.
 **/
 UINT64
 EFIAPI
@@ -99,12 +138,12 @@ GetNextValidPageAddress(
   );
 
 /**
-  Get the previous valid page address before the current address.
+  Get the previous browsable page address before the current address.
 
   @param[in] Address   Current physical address.
   @param[in] PageSize  Page size in bytes.
 
-  @return Previous valid page address, or current page address if none exists.
+  @return Previous browsable page address, or current page address if none exists.
 **/
 UINT64
 EFIAPI
@@ -116,7 +155,7 @@ GetPreviousValidPageAddress(
 /**
   Dump cached memory ranges.
 
-  @param[in] ShowAllTypes  TRUE to show all memory types; FALSE to show only valid ranges.
+  @param[in] ShowAllTypes  TRUE to show all memory types; FALSE to show browsable ranges.
 **/
 VOID
 EFIAPI
@@ -145,14 +184,18 @@ GetMemoryMapDescriptors(
 
   @param[in] Address  Physical address to read.
   @param[in] Width    Access width in bytes.
+  @param[out] Value   Pointer that receives the value read.
 
-  @return Value read from the requested address, or 0 if the access is invalid.
+  @retval EFI_SUCCESS            Read completed successfully. A zero value is valid data.
+  @retval EFI_INVALID_PARAMETER  Value, width, or alignment is invalid.
+  @retval EFI_ACCESS_DENIED      Address range is not readable.
 **/
-UINT64
+EFI_STATUS
 EFIAPI
 MemRead(
-  UINT64 Address,
-  UINTN  Width
+  UINT64     Address,
+  UINTN      Width,
+  OUT UINT64 *Value
   );
 
 /**
@@ -164,7 +207,7 @@ MemRead(
 
   @retval EFI_SUCCESS            Write completed successfully.
   @retval EFI_INVALID_PARAMETER  Width or alignment is invalid.
-  @retval EFI_ACCESS_DENIED      Address is not valid.
+  @retval EFI_ACCESS_DENIED      Address range is not writable.
   @retval Others                 Platform-specific write error.
 **/
 EFI_STATUS
@@ -173,6 +216,25 @@ MemWrite(
   UINT64 Address,
   UINTN  Width,
   UINT64 Value
+  );
+
+/**
+  Replace cached memory map state for host-side or controlled testing.
+
+  The descriptor buffer is not copied; the caller owns its lifetime.
+**/
+VOID
+EFIAPI
+SetMemoryMapForTesting(
+  IN CONST EFI_MEMORY_DESCRIPTOR *MemoryMap,
+  IN UINTN                        MemoryMapSize,
+  IN UINTN                        DescriptorSize
+  );
+
+VOID
+EFIAPI
+SetMemoryAttributeProtocolForTesting(
+  IN EFI_MEMORY_ATTRIBUTE_PROTOCOL *Protocol
   );
 
 #endif

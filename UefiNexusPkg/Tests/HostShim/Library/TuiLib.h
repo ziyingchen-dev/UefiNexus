@@ -30,6 +30,11 @@ TuiClearScreen(
   VOID
   );
 
+EFI_INPUT_KEY
+TuiReadKey(
+  VOID
+  );
+
 /**
   Draw a simple header.
 

@@ -61,9 +61,12 @@ typedef struct {
       @param[in] Address  Physical address to read.
       @param[in] Width    Access width in bytes.
 
-      @return Value read from the requested address.
+      @param[out] Value  Pointer that receives the value read.
+
+      @retval NX_UI_SUCCESS  Read completed successfully; zero is valid data.
+      @retval Others         Read failed and no value is available.
     **/
-    NX_U64 (*MemRead)(NX_U64 Address, NX_UINTN Width);
+    NX_UI_STATUS (*MemRead)(NX_U64 Address, NX_UINTN Width, NX_U64 *Value);
 
     /**
       Write a value to a physical address.
@@ -86,6 +89,23 @@ typedef struct {
       @retval Other  Pointer to memory descriptor array.
     **/
     const NX_MEMORY_DESCRIPTOR *(*GetMemoryMapDescriptors)(NX_UINTN *DescriptorCount);
+
+    /**
+      Retrieve the UEFI memory type at a physical address.
+
+      @param[in]  Address  Physical address to look up.
+      @param[out] Type     Original numeric UEFI memory type, when found.
+      @param[out] Found    Whether a descriptor covers Address.
+
+      @retval NX_UI_SUCCESS            Lookup completed.
+      @retval NX_UI_INVALID_PARAMETER  An output pointer is NULL.
+    **/
+    NX_UI_STATUS (*GetMemoryTypeAtAddress)(NX_U64 Address, NX_U32 *Type, NX_BOOL *Found);
+
+    /**
+      Query the firmware-reported access for one complete memory range.
+    **/
+    void (*QueryAccess)(NX_U64 BaseAddress, NX_U64 Length, NX_MEMORY_ACCESS *Access);
 
     /**
       Dump valid memory ranges for debug or UI inspection.

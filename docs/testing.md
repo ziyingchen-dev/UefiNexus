@@ -65,6 +65,21 @@ The tests validate interactions between:
 - Core Logic
 - Mock memory, UI, and error services
 
+The host suite also verifies the shared UEFI memory-type name formatter,
+Memory Viewer title updates on page changes, and cached title metadata on
+same-page cursor and width changes. Memory Viewer and Memory ranges display
+the full UEFI type name without a redundant Tag column.
+
+The host integration suite also exercises NexusMemLib read policy with
+host-backed memory descriptors. ACPI Reclaim and ACPI NVS reads must return
+their actual data; MMIO remains unreadable, and holes or unsupported types
+report read failure rather than being represented as zero-valued data.
+The same suite verifies that firmware memory attributes only restrict the
+existing NexusMemLib access policy: missing protocols, failed queries, and
+`EFI_NO_MAPPING` fall back to the tool policy, while `EFI_MEMORY_RP` and
+`EFI_MEMORY_RO` can deny reads and writes. Attribute bits never grant access
+to ranges the tool policy denies.
+
 Mock services used during testing:
 
 - MemMock
@@ -79,6 +94,11 @@ These tests do not validate:
 - Menu navigation and page dispatch
 - Complete page execution flow
 - Real UEFI adapter implementations
+
+PageMem Goto intentionally permits navigation to holes, unsupported types, and
+other unreadable addresses. Those cells render as `??`; an access failure is
+not displayed as `00`. ACPI ranges remain readable but not writable under the
+tool policy, while MMIO reads and writes remain disabled.
 
 Firmware execution must still be validated separately through QEMU or physical hardware testing.
 

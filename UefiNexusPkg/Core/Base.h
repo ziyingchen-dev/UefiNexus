@@ -73,12 +73,26 @@ typedef enum {
   PhysicalStart Start address in CPU physical address space.
   NumberOfPages Length of the range in 4 KiB pages.
   Attribute     Platform-provided memory attribute bitmask.
+  UefiType      Original numeric UEFI memory type.
 **/
 typedef struct {
     NX_MEMORY_TYPE Type;
     NX_U64         PhysicalStart;
     NX_U64         NumberOfPages;
     NX_U64         Attribute;
+    NX_U32         UefiType;
 } NX_MEMORY_DESCRIPTOR;
+
+/**
+  Platform-independent result of querying firmware memory access attributes.
+**/
+typedef struct {
+    NX_U64  QueryStatus;
+    NX_U64  Attributes;
+    NX_BOOL ReadAllowed;
+    NX_BOOL WriteAllowed;
+    NX_BOOL ExecuteAllowed;
+    NX_BOOL AccessKnown;
+} NX_MEMORY_ACCESS;
 
 #endif

@@ -31,6 +31,13 @@ typedef wchar_t   CHAR16;
 typedef uint8_t   BOOLEAN;
 typedef INTN      EFI_STATUS;
 
+typedef struct {
+    UINT32 Data1;
+    UINT16 Data2;
+    UINT16 Data3;
+    UINT8  Data4[8];
+} EFI_GUID;
+
 /**
   Host-side EFI input key representation.
 **/
@@ -80,6 +87,7 @@ typedef struct {
 #define EFI_ACCESS_DENIED      15
 #define EFI_ABORTED            21
 #define EFI_BUFFER_TOO_SMALL   5
+#define EFI_NO_MAPPING         16
 
 #define EFI_ERROR(Status)      ((Status) != EFI_SUCCESS)
 #define MAX_UINT64            ((UINT64)~0ULL)
@@ -136,5 +144,6 @@ MockPrintCapture(
 #define EfiMemoryMappedIO           11
 #define EfiMemoryMappedIOPortSpace  12
 #define EfiPalCode                  13
+#define EFI_ERROR(Status)      ((Status) != EFI_SUCCESS)
 
 #endif

@@ -133,13 +133,28 @@ UefiBridgeGetMemoryMapDescriptors(
     return gBridgeDescriptors;
 }
 
-NX_U64
+NX_UI_STATUS
 UefiBridgeMemRead(
     NX_U64   Address,
-    NX_UINTN Width
+    NX_UINTN Width,
+    NX_U64  *Value
     )
 {
-    return MemRead(Address, Width);
+      EFI_STATUS Status;
+      UINT64     ReadValue;
+
+      if (Value == NULL) {
+          return NX_UI_INVALID_PARAMETER;
+      }
+
+      *Value = 0;
+      Status = MemRead(Address, Width, &ReadValue);
+      if (EFI_ERROR(Status)) {
+          return EfiStatusToUiStatus(Status);
+      }
+
+      *Value = (NX_U64)ReadValue;
+      return NX_UI_SUCCESS;
 }
 
 NX_UI_STATUS
@@ -150,6 +165,35 @@ UefiBridgeMemWrite(
     )
 {
     return EfiStatusToUiStatus(MemWrite(Address, Width, Value));
+}
+
+void
+UefiBridgeQueryMemoryAccess(
+    NX_U64           BaseAddress,
+    NX_U64           Length,
+    NX_MEMORY_ACCESS *Access
+    )
+{
+    EFI_MEMORY_ACCESS_INFO AccessInfo;
+
+    if (Access == NULL) {
+        return;
+    }
+
+    Access->QueryStatus    = EFI_INVALID_PARAMETER;
+    Access->Attributes     = 0;
+    Access->ReadAllowed    = NX_FALSE;
+    Access->WriteAllowed   = NX_FALSE;
+    Access->ExecuteAllowed = NX_FALSE;
+    Access->AccessKnown    = NX_FALSE;
+
+    QueryMemoryAccess(BaseAddress, Length, &AccessInfo);
+    Access->QueryStatus    = (NX_U64)AccessInfo.QueryStatus;
+    Access->Attributes     = AccessInfo.Attributes;
+    Access->ReadAllowed    = AccessInfo.ReadAllowed ? NX_TRUE : NX_FALSE;
+    Access->WriteAllowed   = AccessInfo.WriteAllowed ? NX_TRUE : NX_FALSE;
+    Access->ExecuteAllowed = AccessInfo.ExecuteAllowed ? NX_TRUE : NX_FALSE;
+    Access->AccessKnown    = AccessInfo.AccessKnown ? NX_TRUE : NX_FALSE;
 }
 
 void

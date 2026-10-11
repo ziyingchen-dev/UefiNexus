@@ -2,8 +2,8 @@
   Physical memory access helpers for NexusMemLib.
 
   This module provides width-based physical memory read and write helpers.
-  Accesses are limited to valid addresses tracked by NexusMemLib and must be
-  naturally aligned to the requested access width.
+  Read results carry an EFI_STATUS separately from the value so a failed
+  access cannot be mistaken for valid zero-valued memory.
 
   Copyright (c) 2026, ziyingchen-dev
   SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -50,38 +50,43 @@ IsAligned(
   return ((Address & (Width - 1)) == 0);
 }
 
-UINT64
+EFI_STATUS
 EFIAPI
 MemRead(
   UINT64 Address,
-  UINTN  Width
+  UINTN  Width,
+  OUT UINT64 *Value
   )
 {
-  if (!IsSupportedWidth(Width)) {
-    return 0;
+  if (Value == NULL) {
+    return EFI_INVALID_PARAMETER;
   }
 
-  if (!IsAddressValid(Address)) {
-    return 0;
+  *Value = 0;
+
+  if (!IsSupportedWidth(Width)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (!IsRangeValid(Address, Width)) {
+    return EFI_ACCESS_DENIED;
   }
 
   if (!IsAligned(Address, Width)) {
-    return 0;
+    return EFI_INVALID_PARAMETER;
   }
 
   if (Width == 1) {
-    return *(volatile UINT8 *)(UINTN)Address;
+    *Value = *(volatile UINT8 *)(UINTN)Address;
+  } else if (Width == 2) {
+    *Value = *(volatile UINT16 *)(UINTN)Address;
+  } else if (Width == 4) {
+    *Value = *(volatile UINT32 *)(UINTN)Address;
+  } else {
+    *Value = *(volatile UINT64 *)(UINTN)Address;
   }
 
-  if (Width == 2) {
-    return *(volatile UINT16 *)(UINTN)Address;
-  }
-
-  if (Width == 4) {
-    return *(volatile UINT32 *)(UINTN)Address;
-  }
-
-  return *(volatile UINT64 *)(UINTN)Address;
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
@@ -96,7 +101,7 @@ MemWrite(
     return EFI_INVALID_PARAMETER;
   }
 
-  if (!IsAddressValid(Address)) {
+  if (!IsRangeWritable(Address, Width)) {
     return EFI_ACCESS_DENIED;
   }
 

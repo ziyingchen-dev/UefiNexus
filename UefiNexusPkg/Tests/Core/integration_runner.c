@@ -20,6 +20,8 @@ int gTestFailures = 0;
 // Integration test group entry point.
 //
 void RunIntegrationTests(void);
+void RunMemoryLibTests(void);
+void RunMemoryTypeTests(void);
 
 /**
   Host-side integration test process entry point.
@@ -33,6 +35,8 @@ main(void)
     printf("Running UefiNexus PageMem integration tests...\n");
 
     RunIntegrationTests();
+    RunMemoryLibTests();
+    RunMemoryTypeTests();
 
     printf("\nIntegration tests finished.\n");
 

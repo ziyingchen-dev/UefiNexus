@@ -59,12 +59,16 @@ UefiBridgeGetMemoryMapDescriptors(
   @param[in] Address  Physical address to read.
   @param[in] Width    Access width in bytes.
 
-  @return Value read from the requested address.
+  @param[out] Value  Pointer that receives the value read.
+
+  @retval NX_UI_SUCCESS  Read completed successfully; zero is valid data.
+  @retval Others         Error converted from EFI_STATUS.
 **/
-NX_U64
+NX_UI_STATUS
 UefiBridgeMemRead(
     NX_U64 Address,
-    NX_UINTN Width
+    NX_UINTN Width,
+    NX_U64 *Value
     );
 
 /**
@@ -82,6 +86,13 @@ UefiBridgeMemWrite(
     NX_U64 Address,
     NX_UINTN Width,
     NX_U64 Value
+    );
+
+void
+UefiBridgeQueryMemoryAccess(
+    NX_U64           BaseAddress,
+    NX_U64           Length,
+    NX_MEMORY_ACCESS *Access
     );
 
 /**

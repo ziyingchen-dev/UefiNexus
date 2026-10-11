@@ -47,6 +47,14 @@ EFI_STATUS
     OUT VOID  **Buffer
     );
 
+typedef
+EFI_STATUS
+(EFIAPI *EFI_LOCATE_PROTOCOL)(
+    IN CONST EFI_GUID *Protocol,
+    IN VOID           *Registration,
+    OUT VOID          **Interface
+    );
+
 /**
   Minimal host-side EFI_BOOT_SERVICES table.
 
@@ -56,6 +64,7 @@ typedef struct {
     EFI_FREE_POOL      FreePool;
     EFI_GET_MEMORY_MAP GetMemoryMap;
     EFI_ALLOCATE_POOL  AllocatePool;
+    EFI_LOCATE_PROTOCOL LocateProtocol;
 } EFI_BOOT_SERVICES;
 
 /**

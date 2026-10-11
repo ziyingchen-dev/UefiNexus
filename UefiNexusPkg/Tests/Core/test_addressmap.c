@@ -44,9 +44,9 @@
 // Test descriptor set used by address map unit tests.
 //
 static const NX_MEMORY_DESCRIPTOR gDescriptors[] = {
-    { NX_MEM_OTHER,        0x0000, 1, 0 },
-    { NX_MEM_CONVENTIONAL, 0x1000, 2, 0 },
-    { NX_MEM_LOADER_CODE,  0x4000, 1, 0 },
+    { NX_MEM_OTHER,        0x0000, 1, 0, 0 },
+    { NX_MEM_CONVENTIONAL, 0x1000, 2, 0, 7 },
+    { NX_MEM_LOADER_CODE,  0x4000, 1, 0, 1 },
 };
 
 //

@@ -14,9 +14,11 @@
 #include "UefiBridge.h"
 
 static NX_UI_STATUS MemAdapterInit(void);
-static NX_U64 MemAdapterMemRead(NX_U64 Address, NX_UINTN Width);
+static NX_UI_STATUS MemAdapterMemRead(NX_U64 Address, NX_UINTN Width, NX_U64 *Value);
 static NX_UI_STATUS MemAdapterMemWrite(NX_U64 Address, NX_UINTN Width, NX_U64 Value);
 static const NX_MEMORY_DESCRIPTOR *MemAdapterGetMemoryMapDescriptors(NX_UINTN *DescriptorCount);
+static NX_UI_STATUS MemAdapterGetMemoryTypeAtAddress(NX_U64 Address, NX_U32 *Type, NX_BOOL *Found);
+static void MemAdapterQueryAccess(NX_U64 BaseAddress, NX_U64 Length, NX_MEMORY_ACCESS *Access);
 static void MemAdapterDumpValidRanges(void);
 
 //
@@ -83,6 +85,8 @@ static MEMORY_ADAPTER_INTERFACE mMemoryAdapter = {
     .MemRead                 = MemAdapterMemRead,
     .MemWrite                = MemAdapterMemWrite,
     .GetMemoryMapDescriptors = MemAdapterGetMemoryMapDescriptors,
+    .GetMemoryTypeAtAddress  = MemAdapterGetMemoryTypeAtAddress,
+    .QueryAccess             = MemAdapterQueryAccess,
     .DumpValidRanges         = MemAdapterDumpValidRanges,
 };
 
@@ -131,6 +135,7 @@ MemAdapterInit(void)
         gCoreDescriptors[Index].PhysicalStart = Source->PhysicalStart;
         gCoreDescriptors[Index].NumberOfPages = Source->NumberOfPages;
         gCoreDescriptors[Index].Attribute     = Source->Attribute;
+        gCoreDescriptors[Index].UefiType      = Source->Type;
     }
 
     return NX_UI_SUCCESS;
@@ -142,16 +147,20 @@ MemAdapterInit(void)
   @param[in] Address  Physical address to read.
   @param[in] Width    Access width in bytes.
 
-  @return Value read from the requested address.
+  @param[out] Value  Pointer that receives the value read.
+
+  @retval NX_UI_SUCCESS  Read completed successfully.
+  @retval Others         Error returned by the UEFI bridge layer.
 **/
 static
-NX_U64
+NX_UI_STATUS
 MemAdapterMemRead(
     NX_U64   Address,
-    NX_UINTN Width
+    NX_UINTN Width,
+    NX_U64  *Value
     )
 {
-    return UefiBridgeMemRead(Address, Width);
+    return UefiBridgeMemRead(Address, Width, Value);
 }
 
 /**
@@ -194,6 +203,56 @@ MemAdapterGetMemoryMapDescriptors(
     }
 
     return gCoreDescriptors;
+}
+
+static
+NX_UI_STATUS
+MemAdapterGetMemoryTypeAtAddress(
+    NX_U64   Address,
+    NX_U32  *Type,
+    NX_BOOL *Found
+    )
+{
+    if (Type == NULL || Found == NULL) {
+        return NX_UI_INVALID_PARAMETER;
+    }
+
+    *Type  = 0;
+    *Found = NX_FALSE;
+
+    for (NX_UINTN Index = 0; Index < gCoreDescriptorCount; Index++) {
+        const NX_MEMORY_DESCRIPTOR *Desc;
+        NX_U64                      Size;
+
+        Desc = &gCoreDescriptors[Index];
+        if (Desc->NumberOfPages == 0 || Desc->NumberOfPages > (NX_U64)(~(NX_U64)0 >> 12)) {
+            continue;
+        }
+
+        Size = Desc->NumberOfPages << 12;
+        if (Desc->PhysicalStart > (NX_U64)(~(NX_U64)0) - Size) {
+            continue;
+        }
+
+        if (Address >= Desc->PhysicalStart && Address < Desc->PhysicalStart + Size) {
+            *Type  = Desc->UefiType;
+            *Found = NX_TRUE;
+            break;
+        }
+    }
+
+    return NX_UI_SUCCESS;
+}
+
+static
+void
+MemAdapterQueryAccess(
+    NX_U64           BaseAddress,
+    NX_U64           Length,
+    NX_MEMORY_ACCESS *Access
+    )
+{
+    UefiBridgeQueryMemoryAccess(BaseAddress, Length, Access);
 }
 
 /**

@@ -33,13 +33,17 @@
 // Screen row layout.
 //
 #define PAGEMEM_TITLE_ROW   0
-#define PAGEMEM_INFO_ROW    1
+#define PAGEMEM_TYPE_ROW    1
 #define PAGEMEM_HEADER_ROW  2
 #define PAGEMEM_DATA_ROW    3
 #define PAGEMEM_DATA_ROWS   (PAGE_SIZE / COLS)
-#define PAGEMEM_STATUS_ROW  (PAGEMEM_DATA_ROW + PAGEMEM_DATA_ROWS + 1)
+#define PAGEMEM_STATUS_ROW  (PAGEMEM_DATA_ROW + PAGEMEM_DATA_ROWS)
+#define PAGEMEM_INFO_ROW    PAGEMEM_STATUS_ROW
 #define PAGEMEM_HELP_ROW    (PAGEMEM_STATUS_ROW + 1)
 #define PAGEMEM_HELP2_ROW   (PAGEMEM_HELP_ROW + 1)
+#define PAGEMEM_GOTO_PROMPT_COLUMN 25
+
+#define PAGEMEM_HELP_TEXT L"Arrows: Move  N/P: Page"
 
 //
 // Screen column layout.
@@ -84,12 +88,15 @@ typedef enum {
   PageMem page state.
 
   This structure stores the current state mode, cursor state, address map,
-  and redraw flag.
+  cached UEFI type information for the page base, and redraw flag.
 **/
 typedef struct {
     PAGEMEM_STATE        CurrentState;
     PAGEMEM_CURSOR_STATE CursorState;
     PAGEMEM_ADDRESS_MAP  AddressMap;
+    NX_U32               PageUefiMemoryType;
+    NX_BOOL              PageHasMemoryDescriptor;
+    NX_MEMORY_ACCESS     PageAccess;
     NX_BOOL              NeedsRedraw;
 } PAGEMEM_PAGE_STATE;
 

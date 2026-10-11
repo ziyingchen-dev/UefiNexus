@@ -9,6 +9,7 @@
 **/
 
 #include "PageMemLayered.h"
+#include "../../../Core/UefiMemoryType.h"
 
 enum {
     PAGEMEM_ATTR_NORMAL    = 0x07,
@@ -142,7 +143,48 @@ BuildInfoString(
     AsciiAppendHexFixed(Buffer, BufferSize, &Pos, PageState->CursorState.Offset, 2);
     AsciiAppendString(Buffer, BufferSize, &Pos, "  Width: ");
     AsciiAppendDecimal(Buffer, BufferSize, &Pos, PageState->CursorState.Width);
-    AsciiAppendString(Buffer, BufferSize, &Pos, "  ");
+}
+
+static
+void
+BuildPageTypeString(
+    const PAGEMEM_PAGE_STATE *PageState,
+    NX_CHAR                  *Buffer,
+    NX_UINTN                  BufferSize
+    )
+{
+    NX_CHAR  TypeName[32];
+    NX_CHAR  AccessName[16];
+    NX_UINTN Pos;
+
+    if (PageState == NULL || Buffer == NULL || BufferSize == 0) {
+        return;
+    }
+
+    if (PageState->PageHasMemoryDescriptor) {
+        UefiMemoryTypeFormat(
+            PageState->PageUefiMemoryType,
+            TypeName,
+            sizeof(TypeName)
+            );
+    } else {
+        TypeName[0] = '\0';
+        Pos = 0;
+        AsciiAppendString(TypeName, sizeof(TypeName), &Pos, "Unmapped");
+    }
+
+    UefiMemoryAccessFormat(
+        &PageState->PageAccess,
+        AccessName,
+        sizeof(AccessName)
+        );
+
+    Buffer[0] = '\0';
+    Pos = 0;
+    AsciiAppendString(Buffer, BufferSize, &Pos, "Type: ");
+    AsciiAppendString(Buffer, BufferSize, &Pos, TypeName);
+    AsciiAppendString(Buffer, BufferSize, &Pos, "  Access: ");
+    AsciiAppendString(Buffer, BufferSize, &Pos, AccessName);
 }
 
 /**
@@ -185,14 +227,20 @@ RenderAsciiPreview(
         NX_U64   Value;
         NX_U8    Char;
         NX_BOOL  IsValid;
+        NX_UI_STATUS ReadStatus;
 
         CellOffset = Offset + Index;
         Address    = PageState->CursorState.Address + CellOffset;
         IsValid    = PageCoreIsRangeValid(&PageState->AddressMap, Address, 1);
-        Value      = IsValid ? MemoryAdapter->MemRead(Address, 1) : 0;
+        Value      = 0;
+        ReadStatus = IsValid ?
+                     MemoryAdapter->MemRead(Address, 1, &Value) :
+                     NX_UI_ACCESS_DENIED;
         Char       = (NX_U8)Value;
 
-        AsciiBuf[Index] = (IsValid && Char >= 32 && Char <= 126) ? Char : L'.';
+        AsciiBuf[Index] = (!NX_UI_ERROR(ReadStatus) && Char >= 32 && Char <= 126) ?
+                          Char :
+                          L'.';
     }
 
     AsciiBuf[COLS] = L'\0';
@@ -376,6 +424,7 @@ DrawCell(
     NX_CHAR     AsciiBuffer[CELL_STR_MAX(8)];
     NX_UI_CHAR  Buffer[CELL_STR_MAX(8)];
     NX_BOOL     IsValid;
+    NX_UI_STATUS ReadStatus;
     NX_U64      Value;
 
     Address = PageState->CursorState.Address + Offset;
@@ -384,9 +433,12 @@ DrawCell(
     TuiAdapter->SetAttribute(Highlight ? PAGEMEM_ATTR_HIGHLIGHT : PAGEMEM_ATTR_NORMAL);
 
     IsValid = PageCoreIsRangeValid(&PageState->AddressMap, Address, PageState->CursorState.Width);
-    Value   = IsValid ? MemoryAdapter->MemRead(Address, PageState->CursorState.Width) : 0;
+    Value   = 0;
+    ReadStatus = IsValid ?
+                 MemoryAdapter->MemRead(Address, PageState->CursorState.Width, &Value) :
+                 NX_UI_ACCESS_DENIED;
 
-    if (IsValid) {
+    if (!NX_UI_ERROR(ReadStatus)) {
         PageCoreFormatValueLE(
             Value,
             PageState->CursorState.Width,
@@ -445,7 +497,7 @@ PageMemViewUpdateInfo(
   Draw the fixed PageMem frame.
 
   This includes clearing the screen, drawing the page title, and updating the
-  current address information row.
+  page title and type/access rows.
 **/
 static
 void
@@ -454,10 +506,14 @@ DrawPageFrame(
     const PAGEMEM_PAGE_STATE *PageState
     )
 {
+    NX_CHAR    TypeAscii[96];
+    NX_UI_CHAR Type[96];
+
     TuiAdapter->ClearScreen();
     TuiAdapter->OutputStringAt(0, PAGEMEM_TITLE_ROW, L"Memory Viewer");
-
-    PageMemViewUpdateInfo(TuiAdapter, PageState);
+    BuildPageTypeString(PageState, TypeAscii, sizeof(TypeAscii));
+    AsciiToChar16(TypeAscii, Type, sizeof(Type) / sizeof(Type[0]));
+    TuiAdapter->OutputStringAt(0, PAGEMEM_TYPE_ROW, Type);
 }
 
 /**
@@ -524,10 +580,7 @@ DrawMemoryRows(
 }
 
 /**
-  Draw PageMem status and help rows.
-
-  The status row is cleared first so previous messages do not remain visible
-  after a full redraw.
+  Draw PageMem help rows. The status row is reserved for the live address.
 **/
 static
 void
@@ -535,11 +588,10 @@ DrawPageHelp(
     TUI_ADAPTER_INTERFACE *TuiAdapter
     )
 {
-    ClearRow(TuiAdapter, PAGEMEM_STATUS_ROW);
     ClearRow(TuiAdapter, PAGEMEM_HELP_ROW);
     ClearRow(TuiAdapter, PAGEMEM_HELP2_ROW);
 
-    TuiAdapter->OutputStringAt(0, PAGEMEM_HELP_ROW, L"Arrows: Move  N/P: Page");
+    TuiAdapter->OutputStringAt(0, PAGEMEM_HELP_ROW, PAGEMEM_HELP_TEXT);
     TuiAdapter->OutputStringAt(
         0,
         PAGEMEM_HELP2_ROW,
@@ -562,6 +614,7 @@ PageMemViewDrawPage(
     DrawMemoryHeader(TuiAdapter, PageState);
     DrawMemoryRows(TuiAdapter, MemoryAdapter, PageState);
     DrawPageHelp(TuiAdapter);
+    PageMemViewUpdateInfo(TuiAdapter, PageState);
 }
 
 void

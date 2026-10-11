@@ -46,6 +46,45 @@ ClearStatusLine(
     Tui->OutputStringAt(0, PAGEMEM_STATUS_ROW, Blank);
 }
 
+static
+void
+ClearGotoPrompt(
+    TUI_ADAPTER_INTERFACE *Tui
+    )
+{
+    NX_UINTN   Columns;
+    NX_UINTN   Rows;
+    NX_UINTN   Count;
+    NX_UI_CHAR Blank[DEFAULT_COLUMNS + 1];
+
+    if (Tui == NULL) {
+        return;
+    }
+
+    if (Tui->GetScreenDimensions(&Columns, &Rows) != NX_UI_SUCCESS ||
+        Columns <= PAGEMEM_GOTO_PROMPT_COLUMN) {
+        Columns = DEFAULT_COLUMNS;
+    }
+    (void)Rows;
+
+    Count = Columns - PAGEMEM_GOTO_PROMPT_COLUMN;
+    if (Count > DEFAULT_COLUMNS - PAGEMEM_GOTO_PROMPT_COLUMN) {
+        Count = DEFAULT_COLUMNS - PAGEMEM_GOTO_PROMPT_COLUMN;
+    }
+
+    for (NX_UINTN Index = 0; Index < Count; Index++) {
+        Blank[Index] = L' ';
+    }
+    Blank[Count] = L'\0';
+
+    Tui->OutputStringAt(
+        PAGEMEM_GOTO_PROMPT_COLUMN,
+        PAGEMEM_HELP_ROW,
+        Blank
+        );
+    Tui->OutputStringAt(0, PAGEMEM_HELP_ROW, PAGEMEM_HELP_TEXT);
+}
+
 /**
   Check whether a value fits in the selected access width.
 
@@ -158,27 +197,20 @@ PageMemActionGotoAddress(
         return NX_UI_INVALID_PARAMETER;
     }
 
-    ClearStatusLine(Adapters->Tui);
-    Adapters->Tui->OutputStringAt(0, PAGEMEM_STATUS_ROW, L"Goto address (hex): ");
+    Adapters->Tui->OutputStringAt(
+        PAGEMEM_GOTO_PROMPT_COLUMN,
+        PAGEMEM_HELP_ROW,
+        L"Goto address (hex):"
+        );
 
     if (!Adapters->Tui->ReadHex(&Address, 16)) {
+        ClearGotoPrompt(Adapters->Tui);
         return NX_UI_ABORTED;
     }
 
     PageState->CursorState.Address = PageCoreAlignToPage(Address, PAGE_SIZE);
-
-    if (!PageCoreIsRangeValid(&PageState->AddressMap, PageState->CursorState.Address, PAGE_SIZE)) {
-        ClearStatusLine(Adapters->Tui);
-        Adapters->Tui->OutputStringAt(
-            0,
-            PAGEMEM_STATUS_ROW,
-            L"Invalid address range - staying on current page"
-            );
-        Adapters->Error->ReportError(L"Invalid goto address", NX_UI_INVALID_PARAMETER);
-        return NX_UI_INVALID_PARAMETER;
-    }
-
-    PageState->CursorState.Offset = Address - PageState->CursorState.Address;
+    PageState->CursorState.Offset  = Address - PageState->CursorState.Address;
+    ClearGotoPrompt(Adapters->Tui);
     PageCoreMarkForRedraw(PageState);
 
     return NX_UI_SUCCESS;
