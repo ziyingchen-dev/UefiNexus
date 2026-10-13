@@ -61,3 +61,4 @@ Additional documentation is available in the `docs` directory:
 | [extension-guide.md](docs/extension-guide.md) | Adding and organizing diagnostic modules |
 | [testing.md](docs/testing.md) | Testing strategy and validation workflows |
 | [copilot-pr-flow.md](docs/copilot-pr-flow.md) | Contribution workflow and AI-assisted development guidelines |
+| [PageMem memory viewer](UefiNexusPkg/UI/Pages/PageMem/README.md) | PageMem memory map, display, controls, and access limitations |

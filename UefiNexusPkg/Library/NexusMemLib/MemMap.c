@@ -343,16 +343,6 @@ QueryMemoryAccess(
   }
 
   Desc = FindDescriptorForRange(BaseAddress, Length);
-  ToolReadAllowed = FALSE;
-  ToolWriteAllowed = FALSE;
-  if (Desc != NULL) {
-    ToolReadAllowed = IsToolRangeReadable(BaseAddress, Length);
-    ToolWriteAllowed = IsToolRangeWritable(BaseAddress, Length);
-  }
-
-  AccessInfo->ReadAllowed  = ToolReadAllowed;
-  AccessInfo->WriteAllowed = ToolWriteAllowed;
-  AccessInfo->AccessKnown    = TRUE;
   AccessInfo->QueryStatus = (Desc == NULL) ? EFI_NO_MAPPING : EFI_NOT_FOUND;
 
   if (Desc != NULL) {
@@ -370,12 +360,15 @@ QueryMemoryAccess(
                                           );
       AccessInfo->QueryStatus = Status;
       if (!EFI_ERROR(Status)) {
+        ToolReadAllowed  = IsToolRangeReadable(BaseAddress, Length);
+        ToolWriteAllowed = IsToolRangeWritable(BaseAddress, Length);
         AccessInfo->ReadAllowed =
           ToolReadAllowed && ((AccessInfo->Attributes & EFI_MEMORY_RP) == 0);
         AccessInfo->WriteAllowed =
           ToolWriteAllowed && ((AccessInfo->Attributes & EFI_MEMORY_RO) == 0);
         AccessInfo->ExecuteAllowed =
           (AccessInfo->Attributes & EFI_MEMORY_XP) == 0;
+        AccessInfo->AccessKnown = TRUE;
       } else {
         AccessInfo->Attributes = 0;
       }

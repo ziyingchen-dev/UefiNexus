@@ -362,7 +362,7 @@ TestMemoryAttributeAccessFlags(void)
 
 static
 NX_BOOL
-TestProtocolFailuresFallBackToToolPolicy(void)
+TestProtocolFailuresDenyAccess(void)
 {
   EFI_MEMORY_ACCESS_INFO Access;
   UINT64                 Value;
@@ -377,33 +377,33 @@ TestProtocolFailuresFallBackToToolPolicy(void)
   SetMemoryAttributeProtocolForTesting(NULL);
   ASSERT_EQ(QueryMemoryAccess((UINT64)(uintptr_t)&gTestMemory[16384], 1, &Access),
             EFI_SUCCESS,
-            "Missing protocol uses tool policy");
+            "Missing protocol access query completes");
   ASSERT_EQ(Access.QueryStatus, EFI_NOT_FOUND, "Missing protocol status is retained");
-  ASSERT_TRUE(Access.AccessKnown && Access.ReadAllowed && Access.WriteAllowed,
-              "Missing protocol preserves RAM read/write policy");
+  ASSERT_TRUE(!Access.AccessKnown && !Access.ReadAllowed && !Access.WriteAllowed,
+              "Missing protocol leaves access unknown and denied");
   ASSERT_EQ(gLocateProtocolCount, 1, "Missing protocol is located once");
   ASSERT_EQ(QueryMemoryAccess((UINT64)(uintptr_t)&gTestMemory[16384], 1, &Access),
             EFI_SUCCESS,
-            "Missing protocol continues to use tool policy");
+            "Missing protocol continues to deny access");
   ASSERT_EQ(gLocateProtocolCount, 1, "Missing protocol is not repeatedly located");
   Value = 0;
   ASSERT_EQ(MemRead((UINT64)(uintptr_t)&gTestMemory[16384], 1, &Value),
-            EFI_SUCCESS,
-            "Missing protocol does not block RAM read");
+            EFI_ACCESS_DENIED,
+            "Missing protocol blocks RAM read");
   ASSERT_EQ(MemWrite((UINT64)(uintptr_t)&gTestMemory[16384], 1, 0xAA),
-            EFI_SUCCESS,
-            "Missing protocol does not block RAM write");
-  ASSERT_EQ(gTestMemory[16384], 0xAA, "Missing protocol RAM write reaches memory");
+            EFI_ACCESS_DENIED,
+            "Missing protocol blocks RAM write");
+  ASSERT_EQ(gTestMemory[16384], 0, "Missing protocol leaves memory unchanged");
 
   InitializeTestMemoryMap();
   Address = (UINT64)(uintptr_t)&gTestMemory[16384];
   MemoryAttributeMockSetStatus(EFI_DEVICE_ERROR);
   ASSERT_EQ(QueryMemoryAccess(Address, 1, &Access), EFI_SUCCESS,
-            "GetMemoryAttributes failure falls back to tool policy");
+            "GetMemoryAttributes failure access query completes");
   ASSERT_EQ(Access.QueryStatus, EFI_DEVICE_ERROR,
             "GetMemoryAttributes failure status is retained");
-  ASSERT_TRUE(Access.AccessKnown && Access.ReadAllowed && Access.WriteAllowed,
-              "GetMemoryAttributes failure preserves RAM policy");
+  ASSERT_TRUE(!Access.AccessKnown && !Access.ReadAllowed && !Access.WriteAllowed,
+              "GetMemoryAttributes failure leaves access unknown and denied");
   {
     NX_MEMORY_ACCESS DisplayAccess;
     NX_CHAR          AccessText[16];
@@ -413,13 +413,13 @@ TestProtocolFailuresFallBackToToolPolicy(void)
       Access.ReadAllowed, Access.WriteAllowed, Access.ExecuteAllowed, Access.AccessKnown
     };
     UefiMemoryAccessFormat(&DisplayAccess, AccessText, sizeof(AccessText));
-    ASSERT_TRUE(strcmp(AccessText, "R/W") == 0,
-                "GetMemoryAttributes failure displays fallback access");
+    ASSERT_TRUE(strcmp(AccessText, "Unknown") == 0,
+                "GetMemoryAttributes failure displays unknown access");
   }
-  ASSERT_EQ(MemRead(Address, 1, &Value), EFI_SUCCESS,
-            "GetMemoryAttributes failure does not block read");
-  ASSERT_EQ(MemWrite(Address, 1, 0xAA), EFI_SUCCESS,
-            "GetMemoryAttributes failure does not block write");
+  ASSERT_EQ(MemRead(Address, 1, &Value), EFI_ACCESS_DENIED,
+            "GetMemoryAttributes failure blocks read");
+  ASSERT_EQ(MemWrite(Address, 1, 0xAA), EFI_ACCESS_DENIED,
+            "GetMemoryAttributes failure blocks write");
 
   InitializeTestMemoryMap();
   gLocateProtocolStatus = EFI_SUCCESS;
@@ -437,7 +437,7 @@ TestProtocolFailuresFallBackToToolPolicy(void)
 
 static
 NX_BOOL
-TestFallbackAccessDisplayAndFormatterTruthTable(void)
+TestUnknownAccessDisplayAndFormatterTruthTable(void)
 {
   EFI_MEMORY_ACCESS_INFO AccessInfo;
   NX_MEMORY_ACCESS       Access;
@@ -448,7 +448,7 @@ TestFallbackAccessDisplayAndFormatterTruthTable(void)
     (UINT64)(uintptr_t)&gTestMemory[8192],
     (UINT64)(uintptr_t)&gTestMemory[20480]
   };
-  const NX_CHAR *Expected[] = { "R/W", "R/-", "--", "--" };
+  const NX_CHAR *Expected[] = { "Unknown", "Unknown", "Unknown", "Unknown" };
 
   InitializeTestMemoryMap();
   gTestDescriptors[4].Type = EfiConventionalMemory;
@@ -459,8 +459,8 @@ TestFallbackAccessDisplayAndFormatterTruthTable(void)
 
   for (UINTN Index = 0; Index < sizeof(Bases) / sizeof(Bases[0]); Index++) {
     ASSERT_EQ(QueryMemoryAccess(Bases[Index], 1, &AccessInfo), EFI_SUCCESS,
-              "Fallback access query succeeds without protocol");
-    ASSERT_TRUE(AccessInfo.AccessKnown, "Tool policy fallback is known");
+              "Access query completes without protocol");
+    ASSERT_TRUE(!AccessInfo.AccessKnown, "Access is unknown without protocol");
     Access = (NX_MEMORY_ACCESS) {
       (NX_U64)AccessInfo.QueryStatus,
       AccessInfo.Attributes,
@@ -471,7 +471,7 @@ TestFallbackAccessDisplayAndFormatterTruthTable(void)
     };
     UefiMemoryAccessFormat(&Access, AccessText, sizeof(AccessText));
     ASSERT_TRUE(strcmp(AccessText, Expected[Index]) == 0,
-                "Fallback access uses effective policy formatting");
+                "Missing protocol formats access as unknown");
   }
 
   Access = (NX_MEMORY_ACCESS) {
@@ -493,14 +493,14 @@ TestFallbackAccessDisplayAndFormatterTruthTable(void)
   };
   UefiMemoryAccessFormat(&Access, AccessText, sizeof(AccessText));
   ASSERT_TRUE(strcmp(AccessText, "R/W") == 0,
-              "Known fallback ignores LocateProtocol status");
+              "Known access ignores diagnostic query status");
 
   return NX_TRUE;
 }
 
 static
 NX_BOOL
-TestBootServicesCodeFallsBackToToolPolicy(void)
+TestBootServicesCodeRequiresAttributeProtocol(void)
 {
   EFI_MEMORY_ACCESS_INFO Access;
   UINT64                 Address;
@@ -517,23 +517,21 @@ TestBootServicesCodeFallsBackToToolPolicy(void)
   SetMemoryAttributeProtocolForTesting(NULL);
 
   ASSERT_EQ(QueryMemoryAccess(Address, 4096, &Access), EFI_SUCCESS,
-            "BootServicesCode access uses tool policy without protocol");
-  ASSERT_TRUE(Access.AccessKnown && Access.ReadAllowed && Access.WriteAllowed,
-              "BootServicesCode remains readable and writable");
+            "BootServicesCode access query completes without protocol");
+  ASSERT_TRUE(!Access.AccessKnown && !Access.ReadAllowed && !Access.WriteAllowed,
+              "BootServicesCode access remains unknown and denied");
   DisplayAccess = (NX_MEMORY_ACCESS) {
     (NX_U64)Access.QueryStatus, Access.Attributes,
     Access.ReadAllowed, Access.WriteAllowed, Access.ExecuteAllowed, Access.AccessKnown
   };
   UefiMemoryAccessFormat(&DisplayAccess, AccessText, sizeof(AccessText));
-  ASSERT_TRUE(strcmp(AccessText, "R/W") == 0, "BootServicesCode displays R/W");
+  ASSERT_TRUE(strcmp(AccessText, "Unknown") == 0, "BootServicesCode displays Unknown");
 
   gTestMemory[16384] = 0;
-  ASSERT_EQ(MemRead(Address, 1, &Value), EFI_SUCCESS,
-            "BootServicesCode zero-valued read succeeds");
-  ASSERT_EQ(Value, 0, "BootServicesCode zero value remains valid data");
-  ASSERT_EQ(MemWrite(Address, 1, 0x7B), EFI_SUCCESS,
-            "BootServicesCode write succeeds without protocol");
-  ASSERT_EQ(gTestMemory[16384], 0x7B, "BootServicesCode write updates memory");
+  ASSERT_EQ(MemRead(Address, 1, &Value), EFI_ACCESS_DENIED,
+            "BootServicesCode read is denied without protocol");
+  ASSERT_EQ(MemWrite(Address, 1, 0x7B), EFI_ACCESS_DENIED,
+            "BootServicesCode write is denied without protocol");
 
   return NX_TRUE;
 }
@@ -552,14 +550,14 @@ TestNoMappingAndRangeValidation(void)
   MemoryAttributeMockSetStatus(EFI_NO_MAPPING);
 
   ASSERT_EQ(QueryMemoryAccess(Address, 4096, &Access), EFI_SUCCESS,
-            "No mapping falls back to tool policy");
+            "No mapping access query completes");
   ASSERT_EQ(Access.QueryStatus, EFI_NO_MAPPING, "No mapping status is retained");
-  ASSERT_TRUE(Access.AccessKnown && Access.ReadAllowed && Access.WriteAllowed,
-              "No mapping preserves RAM policy");
-  ASSERT_EQ(MemRead(Address, 1, &(UINT64){ 0 }), EFI_SUCCESS,
-            "No mapping does not reject RAM read");
-  ASSERT_EQ(MemWrite(Address, 1, 0xAA), EFI_SUCCESS,
-            "No mapping does not reject RAM write");
+  ASSERT_TRUE(!Access.AccessKnown && !Access.ReadAllowed && !Access.WriteAllowed,
+              "No mapping leaves access unknown and denied");
+  ASSERT_EQ(MemRead(Address, 1, &(UINT64){ 0 }), EFI_ACCESS_DENIED,
+            "No mapping rejects RAM read");
+  ASSERT_EQ(MemWrite(Address, 1, 0xAA), EFI_ACCESS_DENIED,
+            "No mapping rejects RAM write");
 
   InitializeTestMemoryMap();
   Address = (UINT64)(uintptr_t)&gTestMemory[4095];
@@ -713,9 +711,9 @@ RunMemoryLibTests(VOID)
 
   TEST(TestAcpiRangesReadActualData, "ACPI Read Policy");
   TEST(TestMemoryAttributeAccessFlags, "Memory Attribute Access Flags");
-  TEST(TestProtocolFailuresFallBackToToolPolicy, "Protocol Failures Fall Back to Tool Policy");
-  TEST(TestFallbackAccessDisplayAndFormatterTruthTable, "Fallback Access Display Truth Table");
-  TEST(TestBootServicesCodeFallsBackToToolPolicy, "BootServicesCode Tool Policy Fallback");
+  TEST(TestProtocolFailuresDenyAccess, "Protocol Failures Deny Access");
+  TEST(TestUnknownAccessDisplayAndFormatterTruthTable, "Unknown Access Display Truth Table");
+  TEST(TestBootServicesCodeRequiresAttributeProtocol, "BootServicesCode Requires Attribute Protocol");
   TEST(TestNoMappingAndRangeValidation, "No Mapping and Range Validation");
   TEST(TestReadWriteProtectionEnforced, "Read Write Protection Enforcement");
   TEST(TestRangesAndViewerShareAccessFormatting, "Shared Viewer and Ranges Access");
